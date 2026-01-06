@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Design System Demo</title>
+  <link rel="stylesheet" href="./styles/design-system.css">
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <a href="#" class="nav-brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+      </svg>
+      DesignSystem
+    </a>
+    <div class="nav-links">
+      <a href="#" class="nav-item active">Components</a>
+      <a href="#" class="nav-item">Documentation</a>
+      <a href="#" class="nav-item">Access</a>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+
+    <header class="mb-4 text-center">
+      <h1>Design System Showcase</h1>
+      <p class="text-muted">A modern, responsive design system with a futuristic touch.</p>
+    </header>
+
+    <!-- Colors Section -->
+    <section class="mb-4">
+      <h2>Colors</h2>
+      <div class="grid grid-cols-2 grid-cols-4 gap-2">
+        <div class="card flex items-center justify-center flex-col">
+          <div style="width: 48px; height: 48px; background: var(--color-primary); border-radius: 50%;"></div>
+          <span class="text-small mt-4">Primary</span>
+        </div>
+        <div class="card flex items-center justify-center flex-col">
+          <div style="width: 48px; height: 48px; background: var(--color-accent); border-radius: 50%;"></div>
+          <span class="text-small mt-4">Accent</span>
+        </div>
+        <div class="card flex items-center justify-center flex-col">
+          <div style="width: 48px; height: 48px; background: var(--color-success); border-radius: 50%;"></div>
+          <span class="text-small mt-4">Success</span>
+        </div>
+        <div class="card flex items-center justify-center flex-col">
+          <div style="width: 48px; height: 48px; background: var(--color-danger); border-radius: 50%;"></div>
+          <span class="text-small mt-4">Danger</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Typography Section -->
+    <section class="mb-4">
+      <h2>Typography</h2>
+      <div class="card">
+        <h1>Heading 1 - Modern & Bold</h1>
+        <h2>Heading 2 - Section Title</h2>
+        <h3>Heading 3 - Subsection</h3>
+        <p>This is a standard paragraph. It uses the base font size and optimized line height for readability. <a
+            href="#">This is a link</a> inside the text.</p>
+        <p class="text-small text-muted">This is small muted text, often used for captions or helpers.</p>
+      </div>
+    </section>
+
+    <!-- Buttons Section -->
+    <section class="mb-4">
+      <h2>Buttons</h2>
+      <div class="card">
+        <div class="flex flex-wrap items-center gap-2">
+          <button class="btn btn-primary">Primary Action</button>
+          <button class="btn btn-secondary">Secondary</button>
+          <button class="btn btn-outline">Outline</button>
+          <button class="btn btn-danger">Delete</button>
+          <button class="btn btn-primary" disabled>Disabled</button>
+        </div>
+        <div class="flex flex-wrap items-center mt-4">
+          <button class="btn btn-primary btn-lg">Large Button</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Forms Section -->
+    <section class="mb-4">
+      <h2>Forms</h2>
+      <div class="grid grid-cols-2">
+        <div class="card">
+          <div class="form-group">
+            <label class="label">Full Name</label>
+            <input type="text" class="input" placeholder="Enter your name">
+          </div>
+          <div class="form-group">
+            <label class="label">Email Address</label>
+            <input type="email" class="input" placeholder="john@example.com">
+            <span class="validation-msg text-muted">We'll never share your email.</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="form-group">
+            <label class="label">Department</label>
+            <select class="select">
+              <option>Design</option>
+              <option>Engineering</option>
+              <option>Marketing</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="label">Message</label>
+            <textarea class="textarea" rows="3" placeholder="Tell us more..."></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactives Section (Modals, Toasts) -->
+    <section class="mb-4">
+      <h2>Interactives</h2>
+      <div class="card flex justify-between items-center">
+        <p>Click to test components:</p>
+        <div class="flex">
+          <button class="btn btn-primary" onclick="showToast()">Show Toast</button>
+          <button class="btn btn-outline" onclick="openModal()">Open Modal</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tables Section -->
+    <section class="mb-4">
+      <h2>Data Grid</h2>
+      <div class="table-container">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>User</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>#1024</td>
+              <td>Alice Johnson</td>
+              <td>Admin</td>
+              <td><span class="badge success">Active</span></td>
+              <td><button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;">Edit</button></td>
+            </tr>
+            <tr>
+              <td>#1025</td>
+              <td>Bob Smith</td>
+              <td>Editor</td>
+              <td><span class="badge warning">Pending</span></td>
+              <td><button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;">Edit</button></td>
+            </tr>
+            <tr>
+              <td>#1026</td>
+              <td>Charlie Brown</td>
+              <td>User</td>
+              <td><span class="badge danger">Inactive</span></td>
+              <td><button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;">Edit</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Toast Component -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Modal Component -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>System Notification</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <p>This is a modern modal dialog. It uses a backdrop blur effect and smooth scaling animation.</p>
+      </div>
+      <div class="flex justify-between mt-4">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="closeModal()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showToast() {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast success';
+      toast.innerHTML = '<span>Operation completed successfully!</span>';
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function openModal() {
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('open');
+    }
+  </script>
+</body>
+
+</html>
