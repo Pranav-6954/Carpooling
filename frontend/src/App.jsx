@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Snowfall from "react-snowfall";
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastProvider } from "./common/ToastContainer";
 
@@ -9,7 +9,7 @@ import ProtectedRoute from "./common/ProtectedRoute";
 
 /* Home */
 import Home from "./home/Home";
-import WhyRideConnect from "./home/WhyRideConnect";
+import WhyRideShare from "./home/WhyRideShare";
 
 /* Auth */
 import Login from "./auth/Login";
@@ -21,9 +21,13 @@ import AdminUsers from "./admin/AdminUsers";
 import AddVehicle from "./admin/AddVehicle";
 import VehiclesList from "./admin/VehiclesList";
 import AdminBookings from "./admin/AdminBookings";
+import AdminReports from "./admin/AdminReports";
+import AnalyticsPage from "./admin/AnalyticsPage";
 import DriverDashboard from "./driver/DriverDashboard";
 import DriverReserve from "./driver/DriverReserve";
 import DriverHistory from "./driver/DriverHistory";
+
+import DriverAllBookings from "./driver/DriverAllBookings";
 
 /* User */
 import UserBus from "./user/UserBus";
@@ -68,22 +72,12 @@ export default function App() {
   return (
     <ToastProvider>
       <Router>
-        <Snowfall
-          snowflakeCount={isDark ? 200 : 100}
-          color={isDark ? "#ffffff" : "#acc1ff"}
-          style={{
-            position: "fixed",
-            width: "100vw",
-            height: "100vh",
-            zIndex: 1000,
-            pointerEvents: "none",
-          }}
-        />
+
         <Header isDark={isDark} toggleTheme={toggleTheme} />
         <Routes>
           {/* Root Redirect */}{/* Replaced by Home */}
           <Route path="/" element={<Home />} />
-          <Route path="/why-rideshare" element={<WhyRideConnect />} />
+          <Route path="/why-rideshare" element={<WhyRideShare />} />
 
           {/* Public */}
           <Route path="/login" element={<Login />} />
@@ -96,11 +90,14 @@ export default function App() {
           <Route path="/admin/edit-vehicle/:id" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]}><AddVehicle /></ProtectedRoute>} />
           <Route path="/admin/vehicles" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]}><VehiclesList /></ProtectedRoute>} />
           <Route path="/admin/bookings" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]}><AdminBookings /></ProtectedRoute>} />
+          <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]}><AdminReports /></ProtectedRoute>} />
+          <Route path="/admin/analytics" element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]}><AnalyticsPage /></ProtectedRoute>} />
           {/* Driver Routes */}
           <Route path="/driver-dashboard" element={<ProtectedRoute allowedRoles={["ROLE_DRIVER"]}><DriverDashboard /></ProtectedRoute>} />
           <Route path="/driver/reserve/:id" element={<ProtectedRoute allowedRoles={["ROLE_DRIVER"]}><DriverReserve /></ProtectedRoute>} />
           <Route path="/driver/add-ride" element={<ProtectedRoute allowedRoles={["ROLE_DRIVER"]}><AddVehicle /></ProtectedRoute>} />
           <Route path="/driver-history" element={<ProtectedRoute allowedRoles={["ROLE_DRIVER"]}><DriverHistory /></ProtectedRoute>} />
+          <Route path="/driver/my-rides" element={<ProtectedRoute allowedRoles={["ROLE_DRIVER"]}><DriverAllBookings /></ProtectedRoute>} />
 
           {/* User */}
           <Route path="/user-rides" element={<ProtectedRoute allowedRoles={["ROLE_USER"]}><UserBus /></ProtectedRoute>} />
@@ -119,3 +116,4 @@ export default function App() {
     </ToastProvider>
   );
 }
+

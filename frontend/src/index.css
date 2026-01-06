@@ -345,3 +345,8 @@ tr:hover {
     font-size: 0.9rem;
     font-weight: 500;
 }
+.btn-admin-nav:hover {
+    background-color: #3b82f6 !important;
+    color: white !important;
+    border-color: #3b82f6 !important;
+}
