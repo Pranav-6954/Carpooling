@@ -3,6 +3,7 @@ import { apiFetch } from "../utils/jwt";
 import Pagination from "../common/Pagination";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../common/ToastContainer";
+import ConfirmModal from "../common/ConfirmModal";
 
 const UserBookings = () => {
   const nav = useNavigate();
@@ -15,6 +16,85 @@ const UserBookings = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const { showToast } = useToast();
+  const [cancelling, setCancelling] = useState(null);
+  const [reporting, setReporting] = useState(null);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDesc, setReportDesc] = useState("");
+
+  // Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    type: "primary",
+    confirmText: "Confirm"
+  });
+
+  const closeConfirm = () => setConfirmModal(prev => ({ ...prev, isOpen: false }));
+
+  const openConfirm = (title, message, onConfirm, type = "primary", confirmText = "Confirm") => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        closeConfirm();
+      },
+      type,
+      confirmText
+    });
+  };
+
+  const handleReportSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const b = bookings.find(x => x.id === reporting);
+      await apiFetch("/api/reports", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rideId: b.ride.id,
+          reportedUserEmail: b.ride.driverEmail,
+          reason: reportReason,
+          description: reportDesc
+        })
+      });
+      showToast("Report submitted. We will investigate.", 'success');
+      setReporting(null);
+      setReportReason("");
+      setReportDesc("");
+    } catch (err) {
+      showToast(err.message || "Failed to submit report", 'error');
+    }
+  };
+
+  const handleBookingCancel = async (e) => {
+    e.preventDefault();
+    if (!cancelling) return;
+
+    openConfirm(
+      "Confirm Cancellation",
+      "Are you sure you want to cancel this booking? This action cannot be undone.",
+      async () => {
+        try {
+          await apiFetch(`/api/bookings/${cancelling}/cancel`, {
+            method: 'PUT',
+            body: JSON.stringify({ reason: cancelReason || "No reason provided" })
+          });
+          showToast("Booking cancelled", 'success');
+          setCancelling(null);
+          setCancelReason("");
+          fetchBookings();
+        } catch (err) {
+          showToast(err.message || "Failed to cancel", 'error');
+        }
+      },
+      "danger",
+      "Yes, Cancel It"
+    );
+  };
 
   const fetchBookings = () => {
     setLoading(true);
@@ -162,8 +242,13 @@ const UserBookings = () => {
                         <button className="btn btn-primary" onClick={() => setReviewing(b.id)}>⭐ Rate Driver</button>
                       )}
 
-                      {/* Stripe Payment Button */}
-                      {(b.status === 'PAYMENT_PENDING' || (b.status === 'DRIVER_COMPLETED' && b.paymentMethod !== 'CASH')) && (
+                      {/* Cancel Button - Only if not completed/paid */}
+                      {(b.status === 'PENDING' || b.status === 'ACCEPTED' || b.status === 'PAYMENT_PENDING') && !cancelling && b.ride?.status !== 'COMPLETED' && (
+                        <button className="btn" style={{ background: '#fef2f2', color: '#dc2626', border: 'none', fontWeight: 600, padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => setCancelling(b.id)}>Cancel Booking</button>
+                      )}
+
+                      {/* Stripe Payment Button - UPDATED for Real-time Payment on Accept */}
+                      {((b.status === 'ACCEPTED' || b.status === 'PAYMENT_PENDING' || b.status === 'DRIVER_COMPLETED') && b.paymentMethod !== 'CASH') && (
                         <button className="btn btn-warning" onClick={() => nav('/payment', { state: { amount: b.totalPrice, bookingId: b.id } })}>
                           💳 Pay ₹{b.totalPrice}
                         </button>
@@ -179,10 +264,11 @@ const UserBookings = () => {
                         </div>
                       )}
 
-                      {b.ride?.driverPhone && (
-                        <div style={{ fontSize: '0.85rem' }}>
-                          <div style={{ opacity: 0.6, marginBottom: '2px' }}>Driver Contact</div>
-                          <div style={{ fontWeight: 600 }}>{b.ride.driverPhone}</div>
+                      {(b.ride?.driverName || b.ride?.driverPhone) && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '0.5rem' }}>
+                          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', fontWeight: 700 }}>Driver</span>
+                          {b.ride?.driverName && <span style={{ fontWeight: 600, fontSize: '1.05rem' }}>{b.ride.driverName}</span>}
+                          {b.ride?.driverPhone && <span style={{ fontSize: '0.9rem' }}>{b.ride.driverPhone}</span>}
                         </div>
                       )}
                       {!isCompleted && daysLeft !== null && (
@@ -233,6 +319,78 @@ const UserBookings = () => {
                       </form>
                     </div>
                   )}
+
+                  {cancelling === b.id && (
+                    <div className="animate-slide-up" style={{ marginTop: '2rem', padding: '1.5rem', background: '#fef2f2', borderRadius: '16px', border: '1px solid var(--danger)' }}>
+                      <h4 style={{ marginBottom: '1rem', color: 'var(--danger)' }}>Cancel Booking?</h4>
+                      <p style={{ marginBottom: '1rem', fontSize: '0.9rem' }}>Please tell us why you are cancelling. This helps us improve.</p>
+                      <form onSubmit={handleBookingCancel}>
+                        <div className="input-group">
+                          <select
+                            className="input"
+                            value={cancelReason}
+                            onChange={e => setCancelReason(e.target.value)}
+                            required
+                          >
+                            <option value="">Select a reason...</option>
+                            <option value="Changed plans">Changed my plans</option>
+                            <option value="Found another ride">Found another ride</option>
+                            <option value="Driver requested cancel">Driver asked to cancel</option>
+                            <option value="Long wait time">Wait time too long</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                        {cancelReason === 'Other' && (
+                          <div className="input-group">
+                            <input
+                              className="input"
+                              placeholder="Specific reason..."
+                              type="text"
+                              onChange={e => setCancelReason(e.target.value)}
+                            />
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                          <button type="button" className="btn btn-outline" onClick={() => { setCancelling(null); setCancelReason(""); }}>Keep Booking</button>
+                          <button type="submit" className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}>
+                            Confirm Cancel
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* Report Form */}
+                  {reporting === b.id && (
+                    <div className="animate-slide-up" style={{ marginTop: '2rem', padding: '1.5rem', background: '#fff1f2', borderRadius: '16px', border: '1px solid var(--danger)' }}>
+                      <h4 style={{ marginBottom: '1rem', color: 'var(--danger)' }}>Report an Issue</h4>
+                      <p style={{ marginBottom: '1rem', fontSize: '0.9rem' }}>Please describe the issue with this ride/driver.</p>
+                      <form onSubmit={handleReportSubmit}>
+                        <div className="input-group">
+                          <select className="input" required value={reportReason} onChange={e => setReportReason(e.target.value)}>
+                            <option value="">Select a reason...</option>
+                            <option value="No Show">Driver didn't show up</option>
+                            <option value="Rash Driving">Rash Driving / Safety</option>
+                            <option value="Harassment">Harassment / Behavior</option>
+                            <option value="Vehicle Mismatch">Vehicle didn't match</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                        <div className="input-group">
+                          <textarea className="input" rows="3" placeholder="Describe what happened..." required value={reportDesc} onChange={e => setReportDesc(e.target.value)}></textarea>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                          <button type="button" className="btn btn-outline" onClick={() => setReporting(null)}>Cancel</button>
+                          <button type="submit" className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}>Submit Report</button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* Report Button (available for most statuses) */}
+                  {!reviewing && !cancelling && !reporting && (
+                    <button className="btn btn-ghost" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem', alignSelf: 'flex-end' }} onClick={() => setReporting(b.id)}>Report Issue</button>
+                  )}
                 </div>
               );
             })}
@@ -244,8 +402,18 @@ const UserBookings = () => {
             onPageChange={setCurrentPage}
           />
         </>
-      )}
-    </div>
+      )
+      }
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={closeConfirm}
+        type={confirmModal.type}
+        confirmText={confirmModal.confirmText}
+      />
+    </div >
   );
 };
 

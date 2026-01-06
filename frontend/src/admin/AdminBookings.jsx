@@ -10,7 +10,7 @@ const AdminBookings = () => {
     const navigate = useNavigate();
 
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 8;
+    const itemsPerPage = 5;
 
     useEffect(() => {
         const token = getToken();
@@ -48,6 +48,17 @@ const AdminBookings = () => {
         currentPage * itemsPerPage
     );
 
+    const getTransactionId = (b) => {
+        if (b.transactionId) return b.transactionId; // Prefer Real ID
+
+        // Legacy Fallback
+        if (b.status === 'CANCELLED' || b.status === 'REJECTED') return "-";
+        if (b.paymentMethod === 'STRIPE') {
+            return `txn_st_${b.id}${new Date(b.createdAt || Date.now()).getTime().toString().slice(-4)}`;
+        }
+        return `txn_cs_${b.id}${new Date(b.createdAt || Date.now()).getTime().toString().slice(-4)}`;
+    };
+
     return (
         <div className="container" style={{ paddingBottom: '4rem' }}>
             <div className="animate-slide-up" style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1.5rem' }}>
@@ -71,15 +82,15 @@ const AdminBookings = () => {
                 <>
                     <div className="card glass animate-slide-up" style={{ padding: 0, overflow: 'hidden' }}>
                         <div className="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th style={{ padding: '1.2rem 1.5rem', width: '80px' }}>ID</th>
-                                        <th style={{ padding: '1.2rem 1.5rem', width: '25%' }}>Passenger & Driver</th>
-                                        <th style={{ padding: '1.2rem 1.5rem', width: '25%' }}>Route</th>
-                                        <th style={{ padding: '1.2rem 1.5rem' }}>Status</th>
-                                        <th style={{ padding: '1.2rem 1.5rem' }}>Payment</th>
-                                        <th style={{ padding: '1.2rem 1.5rem', textAlign: 'right' }}>Amount</th>
+                            <table style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%' }}>
+                                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                                    <tr style={{ background: '#1e293b', color: '#f8fafc' }}>
+                                        <th style={{ padding: '1.2rem 1.5rem', width: '18%', textAlign: 'left', borderTopLeftRadius: '0.5rem' }}>Transaction ID</th>
+                                        <th style={{ padding: '1.2rem 1.5rem', width: '18%', textAlign: 'center' }}>Passenger</th>
+                                        <th style={{ padding: '1.2rem 1.5rem', width: '18%', textAlign: 'center' }}>Driver</th>
+                                        <th style={{ padding: '1.2rem 1.5rem', width: '20%', textAlign: 'center' }}>Route</th>
+                                        <th style={{ padding: '1.2rem 1.5rem', width: '14%', textAlign: 'center' }}>Status</th>
+                                        <th style={{ padding: '1.2rem 1.5rem', textAlign: 'center', width: '12%', borderTopRightRadius: '0.5rem' }}>Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -88,28 +99,36 @@ const AdminBookings = () => {
                                     )}
                                     {paginated.map((b, idx) => (
                                         <tr key={b.id} style={{ animationDelay: `${idx * 0.05}s` }} className="animate-slide-up">
-                                            <td style={{ padding: '1.2rem 1.5rem' }}><span className="badge" style={{ background: 'var(--neutral-100)' }}>#{b.id}</span></td>
                                             <td style={{ padding: '1.2rem 1.5rem' }}>
-                                                <div style={{ fontWeight: 600 }}>{b.userEmail}</div>
-                                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Driver: {b.ride?.driverEmail}</div>
-                                            </td>
-                                            <td style={{ padding: '1.2rem 1.5rem' }}>
-                                                <div style={{ fontWeight: 600 }}>{b.ride?.fromLocation} → {b.ride?.toLocation}</div>
-                                                <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{b.ride?.date}</div>
-                                            </td>
-                                            <td style={{ padding: '1.2rem 1.5rem' }}>
-                                                <span className={`badge badge-${(b.status === 'ACCEPTED' || b.status === "PAID" || b.status === "COMPLETED") ? 'success' : b.status === 'PENDING' ? 'warning' : 'danger'}`}>
-                                                    {b.status}
-                                                </span>
-                                            </td>
-                                            <td style={{ padding: '1.2rem 1.5rem' }}>
-                                                <div style={{ fontWeight: 600 }}>{b.paymentMethod || "N/A"}</div>
-                                                <div style={{ fontSize: '0.8rem', color: b.paymentStatus === 'COMPLETED' ? 'var(--success)' : 'var(--warning)' }}>
-                                                    {b.paymentStatus || "PENDING"}
+                                                <div style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--primary)' }}>
+                                                    {getTransactionId(b)}
+                                                </div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                                    {b.paymentMethod || "UNKNOWN"}
                                                 </div>
                                             </td>
-                                            <td style={{ padding: '1.2rem 1.5rem', textAlign: 'right', fontWeight: 700 }}>
-                                                ₹{b.totalPrice}
+                                            <td style={{ padding: '1.2rem 1.5rem', textAlign: 'center' }}>
+                                                <div style={{ fontWeight: 600 }}>{b.passengerName || "Unknown"}</div>
+                                                <div style={{ fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>{b.userEmail}</div>
+                                            </td>
+                                            <td style={{ padding: '1.2rem 1.5rem', textAlign: 'center' }}>
+                                                <div style={{ fontWeight: 600 }}>{b.driverName || "Unknown"}</div>
+                                                <div style={{ fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>{b.driverEmail || b.ride?.driverEmail}</div>
+                                            </td>
+                                            <td style={{ padding: '1.2rem 1.5rem', textAlign: 'center' }}>
+                                                <div style={{ fontWeight: 600 }}>{b.ride?.fromLocation} → {b.ride?.toLocation}</div>
+                                                <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>{b.ride?.date}</div>
+                                            </td>
+                                            <td style={{ padding: '1.2rem 1.5rem', textAlign: 'center' }}>
+                                                <span className={`badge badge-${(b.status === 'ACCEPTED' || b.status === "PAID" || b.status === "COMPLETED") ? 'success' : b.status === 'PENDING' ? 'warning' : 'danger'}`}>
+                                                    {b.status.charAt(0).toUpperCase() + b.status.slice(1).toLowerCase()}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '1.2rem 1.5rem', textAlign: 'center' }}>
+                                                <div style={{ fontWeight: 700, color: 'var(--success)' }}>₹{b.totalPrice}</div>
+                                                <div style={{ fontSize: '0.75rem', color: b.paymentStatus === 'COMPLETED' || b.paymentStatus === 'PAID' ? 'var(--success)' : 'var(--warning)' }}>
+                                                    {b.paymentStatus || "PENDING"}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}

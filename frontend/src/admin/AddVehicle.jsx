@@ -172,7 +172,45 @@ const AddVehicle = () => {
             </div>
             <div className="input-group">
               <label className="label">Departure Time</label>
-              <input className="input" type="time" value={time} onChange={e => setTime(e.target.value)} required />
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select className="input" style={{ flex: 1 }}
+                  value={time ? (parseInt(time.split(':')[0]) % 12 || 12) : ""}
+                  onChange={e => {
+                    const h = parseInt(e.target.value || "12");
+                    const m = time ? time.split(':')[1] : "00";
+                    const isPm = time ? parseInt(time.split(':')[0]) >= 12 : false;
+                    let newH = h;
+                    if (isPm && h !== 12) newH += 12;
+                    if (!isPm && h === 12) newH = 0;
+                    setTime(`${String(newH).padStart(2, '0')}:${m}`);
+                  }} required>
+                  <option value="" disabled>Hr</option>
+                  {[...Array(12)].map((_, i) => (
+                    <option key={i} value={i + 1}>{i + 1}</option>
+                  ))}
+                </select>
+                <select className="input" style={{ flex: 1 }}
+                  value={time ? time.split(':')[1] : "00"}
+                  onChange={e => {
+                    const h = time ? time.split(':')[0] : "12";
+                    setTime(`${h}:${e.target.value}`);
+                  }}>
+                  {["00", "15", "30", "45"].map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <select className="input" style={{ flex: 1 }}
+                  value={(!time || parseInt(time.split(':')[0]) < 12) ? "AM" : "PM"}
+                  onChange={e => {
+                    const isPm = e.target.value === "PM";
+                    let h = time ? parseInt(time.split(':')[0]) : 12;
+                    const m = time ? time.split(':')[1] : "00";
+                    if (isPm && h < 12) h += 12;
+                    if (!isPm && h >= 12) h -= 12;
+                    setTime(`${String(h).padStart(2, '0')}:${m}`);
+                  }}>
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
             </div>
           </div>
 

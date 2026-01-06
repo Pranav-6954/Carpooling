@@ -11,6 +11,7 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -41,22 +42,7 @@ const AdminUsers = () => {
     loadUsers();
   }, [navigate]);
 
-  const handleEdit = async (id, currentRole) => {
-    const name = prompt("New name:");
-    const email = prompt("New email:");
-    const role = prompt("New role (ROLE_USER, ROLE_DRIVER, ROLE_ADMIN):", currentRole);
-    if (!name || !email || !role) return;
-    try {
-      await apiFetch(`/api/admin/users/${id}`, {
-        method: "PUT",
-        body: JSON.stringify({ name, email, role }),
-      });
-      loadUsers();
-      showToast("User updated successfully", 'success');
-    } catch (err) {
-      showToast(err.message || "Update failed", 'error');
-    }
-  };
+
 
   const handleDelete = async (id) => {
     setConfirmModal({
@@ -153,10 +139,12 @@ const AdminUsers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const filteredUsers = users.filter(u =>
-    u.name?.toLowerCase().includes(search.toLowerCase()) ||
-    u.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = u.name?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase());
+    const matchesRole = roleFilter === "ALL" ? true : u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * itemsPerPage,
@@ -178,6 +166,30 @@ const AdminUsers = () => {
             onChange={e => { setSearch(e.target.value); setCurrentPage(1); }} />
           <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
         </div>
+
+        <div className="btn-group" style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            className={`btn ${roleFilter === 'ALL' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => { setRoleFilter('ALL'); setCurrentPage(1); }}
+            style={{ padding: '0.5rem 1rem' }}
+          >
+            All
+          </button>
+          <button
+            className={`btn ${roleFilter === 'ROLE_USER' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => { setRoleFilter('ROLE_USER'); setCurrentPage(1); }}
+            style={{ padding: '0.5rem 1rem' }}
+          >
+            Passengers
+          </button>
+          <button
+            className={`btn ${roleFilter === 'ROLE_DRIVER' ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => { setRoleFilter('ROLE_DRIVER'); setCurrentPage(1); }}
+            style={{ padding: '0.5rem 1rem' }}
+          >
+            Drivers
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -188,15 +200,22 @@ const AdminUsers = () => {
         <>
           <div className="card glass animate-slide-up" style={{ padding: 0, overflow: 'hidden' }}>
             <div className="table-wrapper">
-              <table>
-                <thead>
+              <table style={{ width: '100%' }}>
+                <thead style={{
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 10,
+                  background: '#1f2937',
+                  color: '#ffffff',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}>
                   <tr>
-                    <th style={{ width: '25%', padding: '1rem' }}>Identity</th>
-                    <th style={{ width: '15%', padding: '1rem' }}>Role</th>
-                    <th style={{ width: '15%', padding: '1rem' }}>Reputation</th>
-                    <th style={{ width: '15%', padding: '1rem' }}>Status</th>
-                    <th style={{ width: '15%', padding: '1rem' }}>Privileges</th>
-                    <th style={{ textAlign: 'right', padding: '1rem' }}>Actions</th>
+                    <th style={{ width: '25%', padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Identity</th>
+                    <th style={{ width: '15%', padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Role</th>
+                    <th style={{ width: '15%', padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Reputation</th>
+                    <th style={{ width: '15%', padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Status</th>
+                    <th style={{ width: '15%', padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Privileges</th>
+                    <th style={{ textAlign: 'center', padding: '1rem', fontWeight: 'bold' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -204,32 +223,32 @@ const AdminUsers = () => {
                     <tr><td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>No matching users found</td></tr>
                   )}
                   {paginatedUsers.map((u, idx) => (
-                    <tr key={u.id} style={{ animationDelay: `${idx * 0.05}s` }} className="animate-slide-up">
-                      <td>
+                    <tr key={u.id} style={{ animationDelay: `${idx * 0.05}s`, verticalAlign: 'middle', borderBottom: '1px solid #eee' }} className="animate-slide-up hover-trigger">
+                      <td style={{ padding: '1rem' }}>
                         <div style={{ fontWeight: 600 }}>{u.name} {u.verified && <span title="Verified" style={{ color: 'var(--primary)', marginLeft: '4px' }}>✓</span>}</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{u.email}</div>
                       </td>
-                      <td>
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
                         <span className={`badge badge-${u.role === 'ROLE_ADMIN' ? 'primary' : u.role === 'ROLE_DRIVER' ? 'success' : u.role === 'ROLE_BLOCKED' ? 'danger' : 'secondary'}`}>
                           {u.role?.replace('ROLE_', '')}
                         </span>
                       </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                           <span style={{ color: '#fbbf24' }}>★</span>
                           <span style={{ fontWeight: 600 }}>{u.averageRating?.toFixed(1) || 'N/A'}</span>
                         </div>
                       </td>
-                      <td>
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
                         {u.requestedAdmin ? <span className="badge badge-warning">Requesting Admin</span> :
                           u.role === 'ROLE_BLOCKED' ? <span className="badge badge-danger">Blocked</span> :
                             <span style={{ opacity: 0.4, fontSize: '0.8rem' }}>Active</span>}
                       </td>
-                      <td>
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
                         {u.superAdmin ? <span className="badge badge-primary">Super Admin</span> : <span style={{ opacity: 0.4, fontSize: '0.8rem' }}>Regular</span>}
                       </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', alignItems: 'center', whiteSpace: 'nowrap' }}>
                           {isSuperAdmin && u.requestedAdmin && (
                             <button className="btn btn-primary" style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem' }} onClick={() => handleApprove(u.id)}>Approve</button>
                           )}
@@ -244,7 +263,7 @@ const AdminUsers = () => {
                             <button className="btn btn-outline" style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', borderColor: 'var(--danger)', color: 'var(--danger)' }} onClick={() => handleBlock(u.id)}>Block</button>
                           )}
 
-                          <button className="btn btn-outline" style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem' }} onClick={() => handleEdit(u.id, u.role)}>Edit</button>
+
 
                           {isSuperAdmin && !u.superAdmin && (
                             <button className="btn btn-outline" style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', borderColor: 'var(--danger)', color: 'var(--danger)' }} onClick={() => handleDelete(u.id)}>Delete</button>

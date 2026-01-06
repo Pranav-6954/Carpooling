@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
@@ -49,6 +50,17 @@ const DriverDashboard = () => {
         confirmText: "Confirm"
     });
 
+    // Cancel Modal State
+    const [cancelModal, setCancelModal] = useState({
+        isOpen: false,
+        rideId: null,
+        reason: ""
+    });
+
+    const handleOpenCancel = (rideId) => {
+        setCancelModal({ isOpen: true, rideId, reason: "" });
+    };
+
     const closeConfirm = () => setConfirmModal(prev => ({ ...prev, isOpen: false }));
 
     const openConfirm = (title, message, onConfirm, type = "primary", confirmText = "Confirm") => {
@@ -63,6 +75,21 @@ const DriverDashboard = () => {
             type,
             confirmText
         });
+    };
+
+    const confirmCancelRide = async () => {
+        if (!cancelModal.rideId) return;
+        try {
+            await apiFetch(`/api/rides/${cancelModal.rideId}/cancel`, {
+                method: "PUT",
+                body: JSON.stringify({ reason: cancelModal.reason || "Driver cancelled" })
+            });
+            showToast("Ride cancelled successfully", "success");
+            setCancelModal({ isOpen: false, rideId: null, reason: "" });
+            fetchBookings();
+        } catch (err) {
+            showToast(err.message || "Failed to cancel ride", "error");
+        }
     };
 
     // WebSocket Connection
@@ -100,8 +127,22 @@ const DriverDashboard = () => {
             setStats({ total, pending, confirmed });
 
             // Fetch My Rides
-            const rideData = await apiFetch("/api/rides/driver-posts");
-            setMyRides(rideData.filter(r => r.status === "OPEN"));
+            const rideData = await apiFetch("/api/rides/driver-posts", { cache: "no-store" });
+
+            // Filter: Show OPEN rides OR rides that are technically OPEN but past date (Expired)
+            // We can just show all non-cancelled/completed? Or just show all and let UI badge handle it?
+            // User query implies they want to see it in the list.
+            // Let's filter to exclude CANCELLED/COMPLETED if we want "Active" but include everything if we rename section.
+            // But for "Active Rides" section, maybe just OPEN is correct?
+            // The user says "expired as driver post ride but he did not get passenger request and date is passed so it is in field of expired"
+            // So we should capture rides that are OPEN but date < today.
+
+            // Let's just show ALL rides that are not explicitly cancelled/deleted so user sees them? 
+            // Better: update the list to show everything but handle status display.
+            // "My Active Rides" title might need change if we show everything.
+            // But let's stick to showing: OPEN, and if OPEN + Past Date -> Treat as Expired.
+
+            setMyRides(rideData.filter(r => r.status === "OPEN" || r.status === "EXPIRED"));
 
             // Fetch My Reviews
             const reviewData = await apiFetch(`/api/reviews/user/${user.email}`);
@@ -123,6 +164,9 @@ const DriverDashboard = () => {
     // Derived state for filtering and sorting
     const filteredBookings = bookings
         .filter(b => {
+            // Show ONLY Pending requests here
+            if (b.status !== "PENDING") return false;
+
             const name = b.passengers && b.passengers.length > 0 ? b.passengers[0].name : (b.userEmail || "Unknown");
             return (name && name.toLowerCase().includes(searchText.toLowerCase())) ||
                 (b.userEmail && b.userEmail.toLowerCase().includes(searchText.toLowerCase()));
@@ -265,7 +309,7 @@ const DriverDashboard = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 fade-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
                 <div className="card glass text-center transition-all hover:-translate-y-1">
-                    <div style={{ padding: '20px', background: 'var(--primary-glow)', borderRadius: '16px', color: 'var(--primary)', width: 'fit-content', margin: '0 auto 1.5rem' }}>
+                    <div style={{ padding: '20px', background: 'var(--primary-glow)', borderRadius: '16px', color: 'var(--primary)', width: 'fit-content', margin: '0 auto 1.5rem', border: '2px solid var(--primary)' }}>
                         📝
                     </div>
                     <h3 className="text-primary mb-1" style={{ fontSize: '2.5rem', fontWeight: 800 }}>{stats.total}</h3>
@@ -319,12 +363,20 @@ const DriverDashboard = () => {
                                     </td>
                                     <td className="text-success font-bold" style={{ padding: '1rem', color: 'var(--success)' }}>₹{r.price}</td>
                                     <td style={{ padding: '1rem' }}>
-                                        <div className="badge">{r.tickets} Left</div>
+                                        {(() => {
+                                            const rideDate = new Date(r.date);
+                                            const isExpired = rideDate < new Date().setHours(0, 0, 0, 0);
+
+                                            if (r.tickets === 0) return <div className="badge badge-error">Sold Out</div>;
+                                            if (isExpired && r.status === "OPEN") return <div className="badge badge-secondary">Expired</div>;
+                                            return <div className="badge">{r.tickets} Left</div>;
+                                        })()}
                                     </td>
-                                    <td style={{ textAlign: 'right', paddingRight: '1.5rem', padding: '1rem' }}>
+                                    <td style={{ textAlign: 'right', paddingRight: '1.5rem', padding: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                                         <button className="btn btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleCompleteRide(r.id)}>
                                             Mark Completed
                                         </button>
+
                                     </td>
                                 </tr>
                             ))}
@@ -378,8 +430,8 @@ const DriverDashboard = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredBookings.length === 0 && <tr><td colSpan="6" className="text-center py-10 text-muted" style={{ padding: '2rem', textAlign: 'center' }}>No booking requests found.</td></tr>}
-                            {filteredBookings.slice((requestsPage - 1) * itemsPerPage, requestsPage * itemsPerPage).map(b => (
+                            {filteredBookings.length === 0 && <tr><td colSpan="7" className="text-center py-10 text-muted" style={{ padding: '2rem', textAlign: 'center' }}>No pending booking requests.</td></tr>}
+                            {filteredBookings.slice(0, 5).map(b => (
                                 <tr key={b.id} className="hover-trigger transition-all">
                                     <td style={{ paddingLeft: '1.5rem', padding: '1rem' }}>
                                         <div className="flex items-center gap-3" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -387,7 +439,12 @@ const DriverDashboard = () => {
                                                 {(b.userEmail || "?").charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{b.passengers && b.passengers[0] ? b.passengers[0].name : b.userEmail}</div>
+                                                <div style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                    {b.passengers && b.passengers[0] ? b.passengers[0].name : b.userEmail}
+                                                    <span className="badge badge-warning" style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '12px' }}>
+                                                        {b.userRating > 0 ? `⭐ ${b.userRating.toFixed(1)}` : `⭐ New`}
+                                                    </span>
+                                                </div>
                                                 <div style={{ fontSize: '0.7rem', opacity: 0.5 }}>{b.userEmail}</div>
                                             </div>
                                         </div>
@@ -475,18 +532,14 @@ const DriverDashboard = () => {
                         </tbody>
                     </table>
                 </div>
-                {/* Pagination Requests */}
-                {filteredBookings.length > itemsPerPage && (
-                    <div className="flex justify-center items-center py-4 gap-4" style={{ display: 'flex', justifyContent: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderTop: '1px solid var(--border)' }}>
-                        <button className="btn btn-outline" disabled={requestsPage === 1} onClick={() => setRequestsPage(p => p - 1)}>&larr;</button>
-                        <span className="text-xs font-bold opacity-60" style={{ fontSize: '0.8rem' }}>Page {requestsPage} of {Math.ceil(filteredBookings.length / itemsPerPage)}</span>
-                        <button className="btn btn-outline" disabled={requestsPage === Math.ceil(filteredBookings.length / itemsPerPage)} onClick={() => setRequestsPage(p => p + 1)}>&rarr;</button>
-                    </div>
-                )}
+                {/* Pagination Removed for Dashboard Limit */}
+                <div style={{ padding: '10px', textAlign: 'center', fontSize: '0.8rem', opacity: 0.7 }}>
+                    Showing recent pending requests. <a href="/driver/my-rides" style={{ textDecoration: 'underline', cursor: 'pointer', color: 'var(--primary)' }} onClick={(e) => { e.preventDefault(); nav('/driver/my-rides'); }}>View All Requests</a>
+                </div>
             </div>
 
             <div className="card glass mt-12 slide-up" style={{ animationDelay: '0.3s' }}>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
+                <div className="flex flex-col items-center mb-8 gap-4" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
                     <div>
                         <h3 className="mb-0" style={{ margin: 0 }}>Driver Reputation</h3>
                         <p className="text-muted text-xs mb-0" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>What passengers are saying about your service</p>
@@ -565,6 +618,57 @@ const DriverDashboard = () => {
                     </div>
                 </div>
             )}
+
+            {/* Cancel Ride Modal */}
+            {console.log("Rendering Cancel Modal? isOpen:", cancelModal.isOpen)}
+            {cancelModal.isOpen && createPortal(
+                <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="card glass slide-up" style={{ width: '100%', maxWidth: '400px', padding: '0', overflow: 'hidden', border: '1px solid var(--danger)', background: '#fff' }}>
+                        <div style={{ padding: '20px', background: '#ffe4e6', borderBottom: '1px solid var(--danger)', textAlign: 'center' }}>
+                            <h3 className="mb-0" style={{ color: '#be123c', fontSize: '1.5rem', fontWeight: 800 }}>Cancel Ride</h3>
+                            <p style={{ fontSize: '0.9rem', color: '#be123c', marginTop: '0.5rem', marginBottom: 0 }}>This will cancel all bookings for this ride.</p>
+                        </div>
+                        <div style={{ padding: '20px' }}>
+
+                            <div className="mb-6" style={{ marginBottom: '1.5rem' }}>
+                                <label className="text-xs font-bold uppercase opacity-60 mb-2 block" style={{ fontSize: '0.75rem', display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Reason</label>
+                                <select
+                                    className="input w-full"
+                                    style={{ width: '100%', marginBottom: '1rem', color: 'black' }}
+                                    value={['Vehicle Issue', 'Health Issue', 'Weather', 'Changed Plans'].includes(cancelModal.reason) ? cancelModal.reason : 'Other'}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        setCancelModal(prev => ({ ...prev, reason: val === 'Other' ? '' : val }));
+                                    }}
+                                >
+                                    <option value="" disabled>Select a reason...</option>
+                                    <option value="Vehicle Issue">Vehicle Breakdown / Issue</option>
+                                    <option value="Health Issue">Personal Health Emergency</option>
+                                    <option value="Weather">Bad Weather Conditions</option>
+                                    <option value="Changed Plans">Change of Plans</option>
+                                    <option value="Other">Other / Custom</option>
+                                </select>
+
+                                <textarea
+                                    className="input w-full"
+                                    style={{ height: '80px', fontSize: '0.9rem', width: '100%', color: 'black' }}
+                                    placeholder="Enter cancellation details..."
+                                    value={cancelModal.reason}
+                                    onChange={e => setCancelModal(prev => ({ ...prev, reason: e.target.value }))}
+                                />
+                            </div>
+
+                            <div className="flex gap-3" style={{ display: 'flex', gap: '0.75rem' }}>
+                                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setCancelModal({ isOpen: false, rideId: null, reason: "" })}>Go Back</button>
+                                <button className="btn btn-primary" style={{ flex: 1, background: 'var(--danger)', borderColor: 'var(--danger)', color: 'white' }} onClick={confirmCancelRide}>Confirm Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+            {/* Cancel Ride Modal - REMOVED per user request */}
+
             <ConfirmModal
                 isOpen={confirmModal.isOpen}
                 title={confirmModal.title}

@@ -3,6 +3,7 @@ import { apiFetch, verifyJWT, getToken } from "../utils/jwt";
 import Pagination from "../common/Pagination";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../common/ToastContainer";
+import ReceiptModal from "./ReceiptModal";
 
 const BookingHistory = () => {
   const nav = useNavigate();
@@ -15,6 +16,7 @@ const BookingHistory = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const { showToast } = useToast();
+  const [receiptBooking, setReceiptBooking] = useState(null);
 
   const fetchBookings = () => {
     setLoading(true);
@@ -127,16 +129,27 @@ const BookingHistory = () => {
                     </div>
 
                     <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      {b.ride?.driverPhone && (
-                        <div style={{ fontSize: '0.85rem' }}>
-                          <div style={{ opacity: 0.6, marginBottom: '2px' }}>Driver Contact</div>
-                          <div style={{ fontWeight: 600 }}>{b.ride.driverPhone}</div>
+                      {(b.ride?.driverName || b.ride?.driverPhone) && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '0.5rem' }}>
+                          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', fontWeight: 700 }}>Driver</span>
+                          {b.ride?.driverName && <span style={{ fontWeight: 600, fontSize: '1.05rem' }}>{b.ride.driverName}</span>}
+                          {b.ride?.driverPhone && <span style={{ fontSize: '0.9rem' }}>{b.ride.driverPhone}</span>}
                         </div>
                       )}
 
                       {(b.status === 'COMPLETED' || b.status === 'PAID' || b.status === 'DRIVER_COMPLETED') && !reviewing && (
                         <button className="btn btn-primary" style={{ marginTop: '0.5rem', width: '100%' }} onClick={() => setReviewing(b.id)}>
                           ⭐ Rate Driver
+                        </button>
+                      )}
+
+                      {(b.status === 'COMPLETED' || b.status === 'PAID' || b.status === 'DRIVER_COMPLETED') && (
+                        <button className="btn btn-outline" style={{ marginTop: '0.5rem', width: '100%', fontSize: '0.9rem' }} onClick={() => {
+                          console.log("Opening receipt for:", b);
+                          setReceiptBooking(b);
+                          showToast("Opening Receipt...", "info");
+                        }}>
+                          📄 View Receipt
                         </button>
                       )}
                     </div>
@@ -194,6 +207,7 @@ const BookingHistory = () => {
           />
         </>
       )}
+      <ReceiptModal isOpen={!!receiptBooking} booking={receiptBooking} onClose={() => setReceiptBooking(null)} />
     </div>
   );
 };

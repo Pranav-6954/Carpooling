@@ -82,6 +82,7 @@ const Header = ({ isDark, toggleTheme }) => {
                 <Link to="/driver-dashboard" className="nav-item">Dashboard</Link>
                 <Link to="/driver/add-ride" className="nav-item">Post Ride</Link>
                 <Link to="/driver-history" className="nav-item">History</Link>
+                <Link to="/driver/my-rides" className="nav-item">My Rides</Link>
                 <Link to="/my-reviews" className="nav-item">My Reviews</Link>
               </>
             )}

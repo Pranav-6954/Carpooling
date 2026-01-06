@@ -30,14 +30,14 @@ const MockCheckoutForm = ({ amount, bookingId }) => {
                     });
 
                     setMessage("Journey Secured! Redirecting... (Demo Mode)");
-                    setTimeout(() => navigate("/booking-success", { state: { booking: { id: bookingId } } }), 1500);
+                    setTimeout(() => navigate("/booking-success", { state: { booking: { id: bookingId }, transactionId: "DEMO-TRX-" + Date.now() } }), 1500);
                 } catch (err) {
                     console.error("Simulation failed:", err);
                     setMessage("Simulated payment failed, but redirecting anyway...");
-                    setTimeout(() => navigate("/booking-success", { state: { booking: { id: bookingId } } }), 1500);
+                    setTimeout(() => navigate("/booking-success", { state: { booking: { id: bookingId }, transactionId: "DEMO-ERR-TRX" } }), 1500);
                 }
             } else {
-                setTimeout(() => navigate("/booking-success", { state: { booking: { id: "DEMO-ID" } } }), 1500);
+                setTimeout(() => navigate("/booking-success", { state: { booking: { id: "DEMO-ID" }, transactionId: "DEMO-TRX-" + Date.now() } }), 1500);
             }
         }, 1500);
     };
@@ -53,7 +53,7 @@ const MockCheckoutForm = ({ amount, bookingId }) => {
 
             <div style={{ padding: '2rem', background: 'transparent', borderRadius: '16px', border: '1px solid var(--border)', marginBottom: '2rem' }}>
                 <div style={{ marginBottom: '1.5rem' }}>
-                    <label className="label">Card Information</label>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', marginBottom: '0.5rem', display: 'block', letterSpacing: '0.05em' }}>Card Number</label>
                     <input
                         type="text"
                         placeholder="0000 0000 0000 0000"
@@ -63,7 +63,7 @@ const MockCheckoutForm = ({ amount, bookingId }) => {
                 </div>
                 <div style={{ display: 'flex', gap: '1.5rem' }}>
                     <div style={{ flex: 1 }}>
-                        <label className="label">Expiration</label>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', marginBottom: '0.5rem', display: 'block', letterSpacing: '0.05em' }}>Expiration</label>
                         <input
                             type="text"
                             placeholder="MM / YY"
@@ -72,7 +72,7 @@ const MockCheckoutForm = ({ amount, bookingId }) => {
                         />
                     </div>
                     <div style={{ flex: 1 }}>
-                        <label className="label">CVC</label>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', marginBottom: '0.5rem', display: 'block', letterSpacing: '0.05em' }}>CVC</label>
                         <input
                             type="text"
                             placeholder="123"
@@ -144,7 +144,13 @@ const CheckoutForm = ({ amount }) => {
 
                     setMessage("Journey Secured! Redirecting...");
                     // Pass explicit navigation state to the success page
-                    setTimeout(() => navigate("/booking-success", { state: { booking: { id: bookingId } } }), 1500);
+                    // Pass explicit navigation state to the success page with Transaction ID
+                    setTimeout(() => navigate("/booking-success", {
+                        state: {
+                            booking: { id: bookingId },
+                            transactionId: paymentIntent.id
+                        }
+                    }), 1500);
                 } catch (e) {
                     console.error("Finalization error:", e);
                     setMessage("Payment succeeded but booking update failed. Contact support.");
@@ -197,19 +203,17 @@ export default function PaymentPage() {
         initialized.current = true;
 
         // If something goes wrong, waiting too long, etc., we fallback to demo mode
-        const controller = new AbortController();
+        // REMOVED AbortController to prevents race conditions in React StrictMode
+        // const controller = new AbortController();
         const timeoutId = setTimeout(() => {
-            // Instead of showing error, we switch to Demo Mode for the user's video requirement
-            // But only after 15s to give real API a chance
-            controller.abort();
-            setDemoMode(true);
-            setClientSecret("DEMO"); // Placeholder
-        }, 15000); // Increased to 15s to avoid premature fallback
+            // controller.abort();
+            setError("Connection timed out. Please check your internet or backend server.");
+        }, 30000);
 
         apiFetch("/api/payment/create-payment-intent", {
             method: "POST",
             body: JSON.stringify({ amount: amount, bookingId: bookingId }),
-            signal: controller.signal
+            // signal: controller.signal
         })
             .then((data) => {
                 clearTimeout(timeoutId);
@@ -217,43 +221,75 @@ export default function PaymentPage() {
                     setClientSecret(data.clientSecret);
                 } else {
                     // Fallback if no secret
-                    setDemoMode(true);
-                    setClientSecret("DEMO");
+                    setError("Backend returned no client secret. Check API response.");
+                    // setDemoMode(true);
+                    // setClientSecret("DEMO");
                 }
             })
             .catch(err => {
                 clearTimeout(timeoutId);
                 // Fallback on error
-                console.warn("Payment API failed, switching to demo mode:", err);
-                setDemoMode(true);
-                setClientSecret("DEMO");
+                console.warn("Payment API failed:", err);
+                setError(`Failed to connect to Payment Server: ${err.message}.`);
+                // DISABLED: Do not switch to demo mode
             });
 
         return () => {
             clearTimeout(timeoutId);
-            controller.abort();
+            // controller.abort();
         };
     }, [amount, bookingId]);
 
+    const [isDark, setIsDark] = useState(document.body.classList.contains("dark-mode"));
+
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            setIsDark(document.body.classList.contains("dark-mode"));
+        });
+        observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+        return () => observer.disconnect();
+    }, []);
+
+    const appearance = {
+        theme: isDark ? 'night' : 'stripe',
+        variables: isDark ? {
+            colorPrimary: '#6366f1',
+            colorBackground: '#1e293b',
+            colorText: '#f1f5f9',
+            colorDanger: '#ef4444',
+            fontFamily: 'Plus Jakarta Sans, sans-serif',
+            borderRadius: '12px',
+        } : {
+            colorPrimary: '#6366f1',
+            colorBackground: '#ffffff',
+            colorText: '#0f172a', // Very dark for better readability
+            colorTextSecondary: '#334155',
+            colorDanger: '#ef4444',
+            fontFamily: 'Plus Jakarta Sans, sans-serif',
+            borderRadius: '12px',
+            borderColor: '#e2e8f0',
+        }
+    };
+
     const options = {
         clientSecret,
-        appearance: {
-            theme: 'night',
-            variables: {
-                colorPrimary: '#6366f1',
-                colorBackground: '#1e293b',
-                colorText: '#f1f5f9',
-                colorDanger: '#ef4444',
-                fontFamily: 'Plus Jakarta Sans, sans-serif',
-                borderRadius: '12px',
-            }
-        }
+        appearance
     };
 
     return (
         <div className="container" style={{ paddingTop: "4rem", paddingBottom: "5rem" }}>
-            {/* If we are in demo mode, show the Mock Form */}
-            {demoMode ? (
+            {/* Show Error if exists */}
+            {error ? (
+                <div style={{ textAlign: "center", marginTop: "8rem" }}>
+                    <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>⚠️</div>
+                    <h3 className="text-danger" style={{ marginBottom: "1rem" }}>Payment System Error</h3>
+                    <p style={{ color: "var(--text-muted)", maxWidth: "500px", margin: "0 auto", marginBottom: "2rem" }}>
+                        {error}
+                    </p>
+                    <button className="btn btn-secondary" onClick={() => window.location.reload()}>Retry Connection</button>
+                    <button className="btn btn-ghost" style={{ marginLeft: "1rem" }} onClick={() => setDemoMode(true)}>Switch to Demo Mode</button>
+                </div>
+            ) : demoMode ? (
                 <MockCheckoutForm amount={amount} bookingId={bookingId} />
             ) : !clientSecret ? (
                 <div style={{ textAlign: "center", marginTop: "8rem", display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

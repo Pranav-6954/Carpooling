@@ -28,7 +28,7 @@ const Home = () => {
                     lineHeight: 1.1,
                     fontWeight: 900
                 }}>
-                    RideConnect
+                    RideShare
                 </h1>
                 <p style={{
                     fontSize: '1.5rem',

@@ -6,11 +6,14 @@ import Pagination from "../common/Pagination";
 import StarRating from "../common/StarRating";
 import { useToast } from "../common/ToastContainer";
 
+import DriverReceiptModal from "./DriverReceiptModal";
+
 const DriverHistory = () => {
     const { showToast } = useToast();
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
+    const [receiptBooking, setReceiptBooking] = useState(null);
 
     // Rating Modal State
     const [rateModalOpen, setRateModalOpen] = useState(false);
@@ -18,11 +21,11 @@ const DriverHistory = () => {
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState("");
 
-    const itemsPerPage = 10;
+    const itemsPerPage = 5;
 
     const fetchHistory = () => {
         setLoading(true);
-        apiFetch("/api/bookings/driver")
+        apiFetch("/api/bookings/driver", { cache: "no-store" })
             .then(data => {
                 if (!Array.isArray(data)) {
                     console.error("Expected array but got:", data);
@@ -85,6 +88,21 @@ const DriverHistory = () => {
         <div className="container mt-4 pb-20">
             <h1 style={{ marginBottom: '2rem' }}>Payment & Ride History</h1>
 
+            <div className="grid grid-cols-2 gap-6 mb-8">
+                <div className="card glass p-6 text-center">
+                    <h3 className="text-success" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
+                        ₹{bookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0)}
+                    </h3>
+                    <p className="text-muted text-xs uppercase font-bold">Total Earnings</p>
+                </div>
+                <div className="card glass p-6 text-center">
+                    <h3 className="text-primary" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
+                        {bookings.length}
+                    </h3>
+                    <p className="text-muted text-xs uppercase font-bold">Completed Rides</p>
+                </div>
+            </div>
+
             <div className="card glass">
                 <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
                     <h3 style={{ margin: 0 }}>Completed Transactions</h3>
@@ -105,21 +123,29 @@ const DriverHistory = () => {
                         <p className="text-muted">No completed payment history found.</p>
                     </div>
                 ) : (
-                    <div className="table-wrapper">
-                        <table className="table" style={{ width: '100%' }}>
-                            <thead style={{ background: 'rgba(255,255,255,0.02)' }}>
+                    <div className="table-wrapper" style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                        <table className="table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
+                            <thead style={{
+                                position: 'sticky',
+                                top: 0,
+                                zIndex: 10,
+                                background: '#1e293b',
+                                color: '#ffffff',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}>
                                 <tr>
-                                    <th style={{ padding: '1rem', textAlign: 'left' }}>Date</th>
-                                    <th style={{ padding: '1rem', textAlign: 'left' }}>Passenger</th>
-                                    <th style={{ padding: '1rem', textAlign: 'left' }}>Route</th>
-                                    <th style={{ padding: '1rem', textAlign: 'left' }}>Amount</th>
-                                    <th style={{ padding: '1rem', textAlign: 'left' }}>Method</th>
-                                    <th style={{ padding: '1rem', textAlign: 'left' }}>Status</th>
+                                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Date</th>
+                                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Passenger</th>
+                                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Route</th>
+                                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Amount</th>
+                                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Method</th>
+                                    <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Status</th>
+                                    <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {paginated.map(b => (
-                                    <tr key={b.id} className="hover-trigger">
+                                    <tr key={b.id} className="hover-trigger" style={{ verticalAlign: 'middle', borderBottom: '1px solid #eee' }}>
                                         <td style={{ padding: '1rem' }}>
                                             {new Date(b.ride?.date || b.createdAt).toLocaleDateString()}
                                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -127,7 +153,12 @@ const DriverHistory = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '1rem' }}>
-                                            <div style={{ fontWeight: 600 }}>{b.passengers?.[0]?.name || "User"}</div>
+                                            <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                {b.passengers?.[0]?.name || b.userEmail || "User"}
+                                                <span className="badge badge-warning" style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '12px' }}>
+                                                    {b.userRating > 0 ? `⭐ ${b.userRating.toFixed(1)}` : `⭐ New`}
+                                                </span>
+                                            </div>
                                             <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>{b.userEmail}</div>
                                         </td>
                                         <td style={{ padding: '1rem' }}>
@@ -137,28 +168,39 @@ const DriverHistory = () => {
                                             ₹{b.totalPrice}
                                         </td>
                                         <td style={{ padding: '1rem' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-                                                <span className={`badge ${b.paymentMethod === 'CASH' ? 'badge-success' : 'badge-primary'}`}>
-                                                    {b.paymentMethod === 'CASH' ? '💵 Cash' : '💳 Stripe'}
-                                                </span>
-                                                {/* Rate Button for Completed Rides */}
-                                                {(b.status === 'COMPLETED' || b.status === "PAID" || b.status === "DRIVER_COMPLETED") && (
-                                                    <button
-                                                        className="btn btn-primary"
-                                                        style={{ fontSize: '0.75rem', padding: '0.3rem 0.8rem', height: 'auto', whiteSpace: 'nowrap' }}
-                                                        onClick={() => handleOpenRate(b)}
-                                                    >
-                                                        Rate Passenger
-                                                    </button>
-                                                )}
-                                            </div>
+                                            <span className={`badge ${b.paymentMethod === 'CASH' ? 'badge-success' : 'badge-primary'}`}>
+                                                {b.paymentMethod === 'CASH' ? '💵 Cash' : '💳 Stripe'}
+                                            </span>
                                         </td>
-                                        <td style={{ padding: '1rem' }}>
+                                        <td style={{ padding: '1rem', textAlign: 'center' }}>
                                             <span className={`badge badge-${(b.status === "COMPLETED" || b.status === "PAID") ? "success" : "warning"}`}>
                                                 {b.status === 'DRIVER_COMPLETED' ? "RIDE COMPLETED" :
                                                     b.status === 'COMPLETED' || b.status === 'PAID' ? "PAYMENT RECEIVED" :
                                                         b.status.replace('_', ' ')}
                                             </span>
+                                        </td>
+                                        <td style={{ padding: '1rem', textAlign: 'center' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                                {(b.status === 'COMPLETED' || b.status === "PAID" || b.status === "DRIVER_COMPLETED") && (
+                                                    <>
+                                                        <button
+                                                            className="btn btn-outline"
+                                                            style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem', height: 'auto', whiteSpace: 'nowrap' }}
+                                                            onClick={() => setReceiptBooking(b)}
+                                                        >
+                                                            📄 Receipt
+                                                        </button>
+
+                                                        <button
+                                                            className="btn btn-primary"
+                                                            style={{ fontSize: '0.75rem', padding: '0.3rem 0.8rem', height: 'auto', whiteSpace: 'nowrap' }}
+                                                            onClick={() => handleOpenRate(b)}
+                                                        >
+                                                            Rate Passenger
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -177,20 +219,8 @@ const DriverHistory = () => {
                 )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                <div className="card glass p-6 text-center">
-                    <h3 className="text-success" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
-                        ₹{bookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0)}
-                    </h3>
-                    <p className="text-muted text-xs uppercase font-bold">Total Earnings</p>
-                </div>
-                <div className="card glass p-6 text-center">
-                    <h3 className="text-primary" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
-                        {bookings.length}
-                    </h3>
-                    <p className="text-muted text-xs uppercase font-bold">Completed Rides</p>
-                </div>
-            </div>
+
+
             {/* Rate Passenger Modal */}
             {rateModalOpen && createPortal(
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -231,6 +261,13 @@ const DriverHistory = () => {
                 </div>,
                 document.body
             )}
+
+            {/* Driver Receipt Modal */}
+            <DriverReceiptModal
+                isOpen={!!receiptBooking}
+                booking={receiptBooking}
+                onClose={() => setReceiptBooking(null)}
+            />
         </div>
     );
 };
