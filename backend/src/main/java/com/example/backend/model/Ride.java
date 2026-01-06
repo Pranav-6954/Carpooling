@@ -30,6 +30,16 @@ public class Ride {
     @Transient
     private int reservedSeats;
 
+    private String cancellationReason;
+
+    public String getCancellationReason() {
+        return cancellationReason;
+    }
+
+    public void setCancellationReason(String cancellationReason) {
+        this.cancellationReason = cancellationReason;
+    }
+
     private Instant createdAt = Instant.now();
 
     private String status = "OPEN"; // OPEN, COMPLETED, CANCELLED

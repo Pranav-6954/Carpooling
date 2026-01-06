@@ -42,6 +42,7 @@ public class PaymentService {
                 if (b != null) {
                     b.setPaymentStatus("PAID");
                     b.setStatus("COMPLETED"); 
+                    b.setTransactionId(stripePaymentIntentId); // Save Real Transaction ID
                     bookingService.updateBooking(b);
 
                     // Notify Driver
@@ -84,6 +85,7 @@ public class PaymentService {
             if (b != null) {
                 b.setPaymentStatus("PAID");
                 b.setStatus("COMPLETED");
+                b.setTransactionId(p.getStripePaymentIntentId()); // Save Simulated Transaction ID
                 bookingService.updateBooking(b);
 
                 // Notify Driver

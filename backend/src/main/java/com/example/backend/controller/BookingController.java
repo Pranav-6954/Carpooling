@@ -17,11 +17,13 @@ public class BookingController {
     private final BookingService bookingService;
     private final RideService rideService;
     private final com.example.backend.service.NotificationService notificationService;
+    private final com.example.backend.service.ReviewService reviewService;
 
-    public BookingController(BookingService bookingService, RideService rideService, com.example.backend.service.NotificationService notificationService) {
+    public BookingController(BookingService bookingService, RideService rideService, com.example.backend.service.NotificationService notificationService, com.example.backend.service.ReviewService reviewService) {
         this.bookingService = bookingService;
         this.rideService = rideService;
         this.notificationService = notificationService;
+        this.reviewService = reviewService;
     }
 
     @PostMapping
@@ -105,8 +107,11 @@ public class BookingController {
 
         String currentUser = auth.getName();
         List<Booking> all = bookingService.allBookings();
+        java.time.LocalDate today = java.time.LocalDate.now();
 
-        List<Booking> driverBookings = all.stream()
+
+        
+        List<Booking> tempList = all.stream()
                 .filter(b -> {
                     if (b.getRide() == null)
                         return false;
@@ -116,6 +121,48 @@ public class BookingController {
                     return currentUser.trim().equalsIgnoreCase(rDriver.trim());
                 })
                 .toList();
+
+        // Separate processing to ensure side-effects happen reliably
+        List<Booking> driverBookings = new java.util.ArrayList<>(tempList);
+        
+        driverBookings.forEach(b -> {
+             if ("PENDING".equals(b.getStatus())) {
+                 try {
+                     String dStr = b.getRide().getDate();
+                     if (dStr != null) {
+                         java.time.LocalDate rDate = null;
+                         try {
+                             // Try ISO first (2025-01-31)
+                             rDate = java.time.LocalDate.parse(dStr);
+                         } catch (Exception e1) {
+                             // Try d/M/yyyy (31/1/2025 or 5/1/2026)
+                             try {
+                                 rDate = java.time.LocalDate.parse(dStr, java.time.format.DateTimeFormatter.ofPattern("d/M/yyyy"));
+                             } catch (Exception e2) {
+                                // Try dd-MM-yyyy
+                                try {
+                                     rDate = java.time.LocalDate.parse(dStr, java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                                } catch (Exception e3) {
+                                     System.err.println("Could not parse date: " + dStr);
+                                }
+                             }
+                         }
+
+                         if (rDate != null && rDate.isBefore(today)) {
+                             b.setStatus("EXPIRED");
+                             bookingService.updateBooking(b);
+                         }
+                     }
+                 } catch (Exception e) {
+                      e.printStackTrace(); 
+                 }
+             }
+             
+             // Calculate rating
+             b.setUserRating(reviewService.getAverageRating(b.getUserEmail()));
+        });
+        
+        driverBookings.sort((b1, b2) -> Long.compare(b2.getId(), b1.getId()));
 
         return ResponseEntity.ok(driverBookings);
     }
@@ -198,5 +245,17 @@ public class BookingController {
         notificationService.createNotification(b.getUserEmail(), "Driver confirmed Cash Payment. Ride Complete!", "PAYMENT_CONFIRMED");
         
         return ResponseEntity.ok(b);
+    }
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelBooking(@PathVariable Long id, @RequestBody Map<String, String> body, Authentication auth) {
+        if (auth == null) return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        
+        try {
+            String reason = body.getOrDefault("reason", "No reason provided");
+            Booking b = bookingService.cancelBooking(id, reason, auth.getName());
+            return ResponseEntity.ok(b);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }

@@ -89,11 +89,27 @@ public class BookingService {
     private void sendNotifications(Booking b, String type) {
         Ride r = b.getRide();
         // Driver Notification
+        // Driver Notification
         if (r.getDriverEmail() != null) {
-            String msg = String.format("New Booking! %d seats from %s to %s. Offer: Rs. %.2f (%s)", 
-                        b.getSeats(), b.getPickupLocation(), b.getDropoffLocation(), b.getTotalPrice(), b.getPaymentMethod());
-            notificationService.createNotification(r.getDriverEmail(), msg, type);
-            // emailService.sendEmail(r.getDriverEmail(), "Carpooling: New Booking Request", msg);
+            if ("BOOKING_CREATED".equals(type)) {
+                String msg = String.format("New Booking! %d seats from %s to %s. Offer: Rs. %.2f (%s)", 
+                            b.getSeats(), b.getPickupLocation(), b.getDropoffLocation(), b.getTotalPrice(), b.getPaymentMethod());
+                notificationService.createNotification(r.getDriverEmail(), msg, type);
+                // emailService.sendEmail(r.getDriverEmail(), "Carpooling: New Booking Request", msg);
+            } else if ("BOOKING_UPDATED".equals(type)) {
+                // Only notify driver of updates if it's significant (e.g. cancelled? handled elsewhere usually)
+                // For general validation, if status changed to COMPLETED or PAID, maybe useful?
+                // But for Ride Completion (initiated by driver), we might want to suppress self-notifications or make them clear.
+                String sub = "Booking Update";
+                String msg = String.format("Booking for %s is now %s", b.getDropoffLocation(), b.getStatus());
+                
+                // If the status is one of the completion flows
+                if ("COMPLETED".equals(b.getStatus()) || "DRIVER_COMPLETED".equals(b.getStatus())) {
+                    msg = "Ride to " + b.getDropoffLocation() + " marked as " + b.getStatus();
+                }
+                
+                notificationService.createNotification(r.getDriverEmail(), msg, type);
+            }
         }
         // Passenger Notification
         if (b.getUserEmail() != null) {
@@ -130,6 +146,57 @@ public class BookingService {
     public Booking updateBooking(Booking b) {
         Booking saved = bookingRepository.save(b);
         sendNotifications(saved, "BOOKING_UPDATED");
+        return saved;
+    }
+
+    @Transactional
+    public Booking cancelBooking(Long bookingId, String reason, String actorEmail) {
+        Booking b = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        Ride r = b.getRide();
+
+        // Security Check: Only Passenger or Driver can cancel
+        boolean isPassenger = b.getUserEmail().equals(actorEmail);
+        boolean isDriver = r.getDriverEmail().equals(actorEmail);
+
+        if (!isPassenger && !isDriver) {
+             throw new RuntimeException("Unauthorized to cancel this booking");
+        }
+
+        // Prevent cancelling if already completed/cancelled
+        if ("CANCELLED".equals(b.getStatus()) || "COMPLETED".equals(b.getStatus())) {
+            throw new RuntimeException("Cannot cancel a booking that is already " + b.getStatus());
+        }
+
+        b.setStatus("CANCELLED");
+        b.setCancellationReason(reason);
+        
+        // RESTORE SEATS
+        r.setTickets(r.getTickets() + b.getSeats());
+        rideRepository.save(r);
+        
+        Booking saved = bookingRepository.save(b);
+
+        // Notifications
+        String targetEmail = isPassenger ? r.getDriverEmail() : b.getUserEmail();
+        String msg = String.format("Booking Cancelled by %s. Reason: %s", 
+            isPassenger ? "Passenger" : "Driver", 
+            reason != null ? reason : "No reason provided");
+            
+        notificationService.createNotification(targetEmail, msg, "BOOKING_CANCELLED");
+        
+        // Also notify the actor confirming cancellation
+        notificationService.createNotification(actorEmail, "Booking successfully cancelled.", "BOOKING_CANCELLED");
+
+        // Send Email
+        try {
+             emailService.sendEmail(targetEmail, "Ride Cancellation Alert", 
+                "Your ride booking has been cancelled.\n\n" + msg + "\n\nRide: " + r.getFromLocation() + " -> " + r.getToLocation());
+        } catch (Exception e) {
+            System.err.println("Failed to send cancellation email: " + e.getMessage());
+        }
+
         return saved;
     }
 

@@ -50,7 +50,7 @@ public class EmailService {
         sb.append("   • Cost:  ₹").append(booking.getTotalPrice()).append("\n");
         sb.append("   • Status: ").append(booking.getPaymentStatus()).append("\n\n");
         sb.append("Safe travels!\n");
-        sb.append("- RideConnect Team");
+        sb.append("- RideShare Team");
 
         String subject = "Ride Confirmed! 🚗 Route: " + ride.getFromLocation() + " -> " + ride.getToLocation();
         
@@ -58,17 +58,89 @@ public class EmailService {
         sendEmail(to, subject, sb.toString());
     }
 
-    public void sendPaymentReceivedEmail(String to, com.example.backend.model.Booking booking) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Hello ").append(to.split("@")[0]).append(",\n\n");
-        sb.append("Payment Successful! 💰\n\n");
-        sb.append("We have received your payment of ₹").append(booking.getTotalPrice()).append(".\n");
-        sb.append("Your ride from ").append(booking.getPickupLocation());
-        sb.append(" to ").append(booking.getDropoffLocation()).append(" is now officially CONFIRMED.\n\n");
-        sb.append("Thank you for choosing RideConnect!\n");
-        sb.append("- RideConnect Team");
+    public void sendHtmlEmail(String to, String subject, String htmlContent) {
+        if (mailSender == null) return;
+        try {
+            jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
+            org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true); // true for HTML
+            mailSender.send(message);
+            System.out.println("✅ HTML Email sent successfully to " + to);
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send HTML email: " + e.getMessage());
+        }
+    }
 
-        String subject = "Payment Receipt: ₹" + booking.getTotalPrice();
-        sendEmail(to, subject, sb.toString());
+    public void sendPaymentReceivedEmail(String to, com.example.backend.model.Booking booking) {
+        String invoiceNo = "INV-" + java.time.Year.now().getValue() + "-" + String.format("%06d", booking.getId());
+        String date = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy"));
+        String amount = String.format("%.2f", booking.getTotalPrice());
+
+        StringBuilder html = new StringBuilder();
+        html.append("<html>");
+        html.append("<body style='font-family: Arial, sans-serif; color: #333;'>");
+        html.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;'>");
+        html.append("    <div style='border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 20px;'>");
+        html.append("        <h1 style='color: #2563eb; margin: 0;'>RideShare</h1>");
+        html.append("        <p style='margin: 5px 0 0; color: #666;'>Passenger Invoice</p>");
+        html.append("    </div>");
+        
+        html.append("    <table style='width: 100%; margin-bottom: 20px;'>");
+        html.append("        <tr>");
+        html.append("            <td>");
+        html.append("                <strong>Bill To:</strong><br/>");
+        html.append("                ").append(to.split("@")[0]).append("<br/>");
+        html.append("                ").append(to);
+        html.append("            </td>");
+        html.append("            <td style='text-align: right;'>");
+        html.append("                <strong>Invoice No:</strong> ").append(invoiceNo).append("<br/>");
+        html.append("                <strong>Date:</strong> ").append(date).append("<br/>");
+        html.append("                <strong>Status:</strong> <span style='color: #22c55e;'>PAID</span>");
+        html.append("            </td>");
+        html.append("        </tr>");
+        html.append("    </table>");
+
+        html.append("    <table style='width: 100%; border-collapse: collapse; margin-bottom: 20px;'>");
+        html.append("        <tr style='background-color: #f8fafc; color: #1e293b;'>");
+        html.append("            <th style='text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0;'>Description</th>");
+        html.append("            <th style='text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0;'>Details</th>");
+        html.append("        </tr>");
+        html.append("        <tr>");
+        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>Source</td>");
+        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>").append(booking.getPickupLocation()).append("</td>");
+        html.append("        </tr>");
+        html.append("        <tr>");
+        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>Destination</td>");
+        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>").append(booking.getDropoffLocation()).append("</td>");
+        html.append("        </tr>");
+        html.append("        <tr>");
+        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>Payment Method</td>");
+        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>Online (Stripe)</td>");
+        html.append("        </tr>");
+        html.append("        <tr>");
+        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>Seats</td>");
+        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>").append(booking.getSeats()).append("</td>");
+        html.append("        </tr>");
+        html.append("    </table>");
+
+        html.append("    <div style='border-top: 2px solid #eee; padding-top: 15px;'>");
+        html.append("        <div style='display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1em;'>");
+        html.append("            <span>Total Paid</span>");
+        html.append("            <span>Rs. ").append(amount).append("</span>");
+        html.append("        </div>");
+        html.append("    </div>");
+
+        html.append("    <div style='margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ccc; text-align: center; color: #888; font-size: 0.9em;'>");
+        html.append("        <p>Thank you for choosing RideShare! Safe travels.</p>");
+        html.append("        <p>- RideShare Team</p>");
+        html.append("    </div>");
+        html.append("</div>");
+        html.append("</body></html>");
+
+        String subject = "Payment Receipt: Rs. " + amount;
+        sendHtmlEmail(to, subject, html.toString());
     }
 }

@@ -26,12 +26,32 @@ public class Booking {
     private String status = "PENDING"; // PENDING, ACCEPTED, REJECTED, DRIVER_COMPLETED, CASH_PAYMENT_PENDING, PAYMENT_PENDING, PAID, COMPLETED, CANCELLED
     private String paymentMethod = "STRIPE"; // STRIPE, CASH
     private String paymentStatus = "UNPAID"; // UNPAID, PAID, REFUNDED
+    private String cancellationReason;
+
+    public String getCancellationReason() {
+        return cancellationReason;
+    }
+
+    public void setCancellationReason(String cancellationReason) {
+        this.cancellationReason = cancellationReason;
+    }
 
     // Dynamic Fare Fields
     private String pickupLocation;
     private String dropoffLocation;
     private Double distanceKm; // Use Wrapper to allow nulls for legacy data
     private Double totalPrice;
+
+    @Transient
+    private double userRating;
+
+    public double getUserRating() {
+        return userRating;
+    }
+
+    public void setUserRating(double userRating) {
+        this.userRating = userRating;
+    }
 
     private Instant createdAt = Instant.now();
 
@@ -141,5 +161,15 @@ public class Booking {
 
     public void setTotalPrice(Double totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    private String transactionId;
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
     }
 }

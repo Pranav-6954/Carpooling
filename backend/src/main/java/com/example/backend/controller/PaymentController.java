@@ -20,6 +20,8 @@ public class PaymentController {
             @org.springframework.beans.factory.annotation.Value("${stripe.api.key}") String stripeApiKey) {
         this.paymentService = paymentService;
         Stripe.apiKey = stripeApiKey;
+        Stripe.setConnectTimeout(10000); // 10s connect timeout
+        Stripe.setReadTimeout(10000);    // 10s read timeout
     }
 
     @PostMapping("/create-payment-intent")
