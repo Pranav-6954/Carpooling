@@ -160,7 +160,7 @@ const UserBus = () => {
       ) : (
         <div className="card glass text-center" style={{ padding: '4rem' }}>
           <h3 style={{ marginBottom: '1rem' }}>No Rides Available</h3>
-          <p style={{ color: 'var(--text-muted)' }}>We couldn't find any rides matching your criteria. Try adjusting your search.</p>
+          <p style={{ color: 'var(--text-muted)', margin: '0 auto' }}>We couldn't find any rides matching your criteria. Try adjusting your search.</p>
           <button className="btn btn-outline mt-4" onClick={resetSearch}>Clear All Filters</button>
         </div>
       )}

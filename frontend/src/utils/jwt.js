@@ -27,7 +27,11 @@ export const verifyJWT = (token) => {
   // Normalize shape: server may use sub/email + role
   return {
     email: info.sub || info.email || info.user?.email,
-    role: (info.role || info.user?.role || "ROLE_USER").toUpperCase(),
+    role: (() => {
+      let r = (info.role || info.user?.role || "ROLE_USER").toUpperCase();
+      if (!r.startsWith("ROLE_")) r = "ROLE_" + r;
+      return r;
+    })(),
     superAdmin: !!info.superAdmin,
     name: info.name || info.user?.name,
     exp: exp || info.exp,
@@ -43,9 +47,9 @@ export const apiFetch = async (path, opts = {}) => {
   let body = null;
   try { body = text ? JSON.parse(text) : null; } catch { body = text; }
   if (!res.ok) {
-    if (res.status === 401 || res.status === 403) {
+    if (res.status === 401) {
       localStorage.removeItem("token");
-      // Optional: window.location.href = "/login"; // Force redirect
+      window.location.href = "/login";
     }
     const err = new Error((body?.error || res.statusText || "Request failed") + ` (Status: ${res.status})`);
     err.status = res.status; err.body = body;
