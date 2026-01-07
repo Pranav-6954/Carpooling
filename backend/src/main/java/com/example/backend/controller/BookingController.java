@@ -107,9 +107,6 @@ public class BookingController {
 
         String currentUser = auth.getName();
         List<Booking> all = bookingService.allBookings();
-        java.time.LocalDate today = java.time.LocalDate.now();
-
-
         
         List<Booking> tempList = all.stream()
                 .filter(b -> {
@@ -120,44 +117,12 @@ public class BookingController {
                         return false;
                     return currentUser.trim().equalsIgnoreCase(rDriver.trim());
                 })
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
 
         // Separate processing to ensure side-effects happen reliably
         List<Booking> driverBookings = new java.util.ArrayList<>(tempList);
         
         driverBookings.forEach(b -> {
-             if ("PENDING".equals(b.getStatus())) {
-                 try {
-                     String dStr = b.getRide().getDate();
-                     if (dStr != null) {
-                         java.time.LocalDate rDate = null;
-                         try {
-                             // Try ISO first (2025-01-31)
-                             rDate = java.time.LocalDate.parse(dStr);
-                         } catch (Exception e1) {
-                             // Try d/M/yyyy (31/1/2025 or 5/1/2026)
-                             try {
-                                 rDate = java.time.LocalDate.parse(dStr, java.time.format.DateTimeFormatter.ofPattern("d/M/yyyy"));
-                             } catch (Exception e2) {
-                                // Try dd-MM-yyyy
-                                try {
-                                     rDate = java.time.LocalDate.parse(dStr, java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-                                } catch (Exception e3) {
-                                     System.err.println("Could not parse date: " + dStr);
-                                }
-                             }
-                         }
-
-                         if (rDate != null && rDate.isBefore(today)) {
-                             b.setStatus("EXPIRED");
-                             bookingService.updateBooking(b);
-                         }
-                     }
-                 } catch (Exception e) {
-                      e.printStackTrace(); 
-                 }
-             }
-             
              // Calculate rating
              b.setUserRating(reviewService.getAverageRating(b.getUserEmail()));
         });

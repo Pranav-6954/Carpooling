@@ -126,39 +126,10 @@ public class RideController {
         if (auth == null)
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
 
-        List<Ride> all = service.list();
         String driverEmail = auth.getName();
-        java.time.LocalDate today = java.time.LocalDate.now();
-
-        // 1. Filter and Process Expiry
-        List<Ride> myRides = all.stream()
+        List<Ride> myRides = service.list().stream()
                 .filter(r -> driverEmail.equals(r.getDriverEmail()))
-                .map(r -> {
-                    // Check logic for Expiry
-                    if ("OPEN".equals(r.getStatus())) {
-                        try {
-                            java.time.LocalDate rideDate = java.time.LocalDate.parse(r.getDate());
-                            if (rideDate.isBefore(today)) {
-                                r.setStatus("EXPIRED");
-                                service.save(r);
-
-                                // Expire pending bookings for this ride
-                                List<Booking> bookings = bookingService.findByRideId(r.getId());
-                                for (Booking b : bookings) {
-                                    if ("PENDING".equals(b.getStatus())) {
-                                        b.setStatus("EXPIRED");
-                                        bookingService.updateBooking(b);
-                                    }
-                                }
-                            }
-                        } catch (Exception e) {
-                            // Date parse error, ignore or log
-                            System.err.println("Date parse error for ride " + r.getId() + ": " + e.getMessage());
-                        }
-                    }
-                    return r;
-                })
-                .filter(r -> "OPEN".equals(r.getStatus()))
+                .filter(r -> "OPEN".equalsIgnoreCase(r.getStatus()))
                 .collect(java.util.stream.Collectors.toList());
 
         return ResponseEntity.ok(myRides);

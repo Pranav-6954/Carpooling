@@ -41,7 +41,7 @@ public class EmailService {
         sb.append("   • From: ").append(ride.getFromLocation()).append("\n");
         sb.append("   • To:   ").append(ride.getToLocation()).append("\n");
         sb.append("   • Date: ").append(ride.getDate()).append("\n");
-        sb.append("   • Time: ").append(ride.getTime()).append("\n\n");
+        sb.append("   • Time: ").append(formatTo12Hour(ride.getTime())).append("\n\n");
         sb.append("🔹 DRIVER INFO:\n");
         sb.append("   • Name:  ").append(driver != null ? driver.getName() : ride.getDriverName()).append("\n");
         sb.append("   • Phone: ").append(driver != null ? driver.getPhone() : ride.getDriverPhone()).append("\n");
@@ -118,7 +118,11 @@ public class EmailService {
         html.append("        </tr>");
         html.append("        <tr>");
         html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>Payment Method</td>");
-        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>Online (Stripe)</td>");
+        String pMethod = booking.getPaymentMethod();
+        if (pMethod == null) pMethod = "N/A";
+        else if (pMethod.toUpperCase().contains("STRIPE") || pMethod.toUpperCase().contains("ONLINE")) pMethod = "Online (Stripe)";
+        else if (pMethod.toUpperCase().contains("CASH")) pMethod = "Cash";
+        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>").append(pMethod).append("</td>");
         html.append("        </tr>");
         html.append("        <tr>");
         html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>Seats</td>");
@@ -142,5 +146,24 @@ public class EmailService {
 
         String subject = "Payment Receipt: Rs. " + amount;
         sendHtmlEmail(to, subject, html.toString());
+    }
+
+    private String formatTo12Hour(String time) {
+        if (time == null || time.isEmpty()) return "N/A";
+        try {
+            // Check if already in 12-hour format
+            if (time.toUpperCase().contains("AM") || time.toUpperCase().contains("PM")) {
+                return time;
+            }
+            
+            // Handle 24-hour format (e.g., "19:00" or "19:00:00")
+            java.time.LocalTime localTime = java.time.LocalTime.parse(time.split(":")[0].length() == 1 ? "0" + time : time, 
+                java.time.format.DateTimeFormatter.ofPattern(time.contains(":") && time.split(":").length > 2 ? "HH:mm:ss" : "HH:mm"));
+            
+            return localTime.format(java.time.format.DateTimeFormatter.ofPattern("h.mm a")).toUpperCase().replace(" ", "");
+        } catch (Exception e) {
+            System.err.println("Error formatting time: " + time + " - " + e.getMessage());
+            return time; // Return original if parsing fails
+        }
     }
 }

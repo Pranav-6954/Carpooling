@@ -296,38 +296,40 @@ public class AdminController {
         Map<String, Long> bookingStatus = new HashMap<>();
         // Calculate Expired Rides (OPEN + Past Date)
         long expiredRides = rides.stream()
-            .filter(r -> r.getStatus() != null && "OPEN".equalsIgnoreCase(r.getStatus().trim()))
             .filter(r -> {
-                String dStr = r.getDate();
-                if (dStr == null || dStr.trim().isEmpty()) return false;
-                dStr = dStr.trim();
+                String status = r.getStatus() == null ? "" : r.getStatus().trim();
+                // Include rides already marked as EXPIRED
+                if ("EXPIRED".equalsIgnoreCase(status)) return true;
                 
-                // Try multiple formats
-                List<String> patterns = Arrays.asList(
-                    "yyyy-MM-dd", 
-                    "d/M/yyyy", 
-                    "dd-MM-yyyy",
-                    "yyyy/MM/dd",
-                    "MM/dd/yyyy",
-                    "dd/MM/yyyy"
-                );
-                
-                for (String p : patterns) {
-                    try {
-                        LocalDate d;
-                        if (p.equals("yyyy-MM-dd")) {
-                             d = LocalDate.parse(dStr);
-                        } else {
-                             d = LocalDate.parse(dStr, DateTimeFormatter.ofPattern(p));
+                // For OPEN rides, check if date is past
+                if ("OPEN".equalsIgnoreCase(status)) {
+                    String dStr = r.getDate();
+                    if (dStr == null || dStr.trim().isEmpty()) return false;
+                    dStr = dStr.trim();
+                    
+                    List<String> patterns = Arrays.asList(
+                        "yyyy-MM-dd", 
+                        "d/M/yyyy", 
+                        "dd-MM-yyyy",
+                        "yyyy/MM/dd",
+                        "MM/dd/yyyy",
+                        "dd/MM/yyyy"
+                    );
+                    
+                    for (String p : patterns) {
+                        try {
+                            LocalDate d;
+                            if (p.equals("yyyy-MM-dd")) {
+                                 d = LocalDate.parse(dStr);
+                            } else {
+                                 d = LocalDate.parse(dStr, DateTimeFormatter.ofPattern(p));
+                            }
+                            return d.isBefore(today);
+                        } catch (Exception e) {
+                            // continue
                         }
-                        return d.isBefore(today);
-                    } catch (Exception e) {
-                        // continue to next pattern
                     }
                 }
-                
-                // Fallback: try JS style timestamp or other? Unlikely for Date string
-                System.err.println("Debug: Could not parse date for expired check: " + dStr);
                 return false;
             })
             .count();
