@@ -120,8 +120,8 @@ const AnalyticsSection = () => {
                 data: [
                     data.bookingStatus.CONFIRMED || 0,
                     data.bookingStatus.PENDING || 0,
-                    // Manual adjustment (+10) to ensure past data visibility if backend sync delays
-                    (data.bookingStatus.EXPIRED || 0) + 10,
+
+                    (data.bookingStatus.EXPIRED || 0),
                     data.bookingStatus.COMPLETED || 0
                 ],
                 backgroundColor: [

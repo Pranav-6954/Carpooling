@@ -57,7 +57,6 @@ const Dashboard = () => {
     <div className="container" style={{ paddingBottom: '4rem' }}>
       <div className="animate-slide-up" style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <h1 style={{ marginBottom: '0.5rem', background: 'linear-gradient(to right, var(--primary), #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>Admin Control Center</h1>
         </div>
         <div className="flex gap-4">
           <button className="btn btn-outline btn-admin-nav" onClick={() => navigate("/admin/users")} style={{ padding: '0.75rem 1.5rem', minWidth: '160px' }}>Manage Users</button>
@@ -130,38 +129,95 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="grid animate-slide-up" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginTop: '2rem', animationDelay: '0.2s' }}>
+          <div className="grid animate-slide-up" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem', marginTop: '2rem', animationDelay: '0.2s' }}>
+            {/* Premium Financials Section */}
+            <div className="card glass" style={{
+              gridColumn: 'span 4',
+              background: 'var(--card-bg)',
+              border: '1px solid var(--border)',
+              position: 'relative',
+              overflow: 'hidden',
+              padding: '2rem'
+            }}>
+              {/* Background Accent */}
+              <div style={{
+                position: 'absolute',
+                top: '-20%',
+                right: '-5%',
+                width: '300px',
+                height: '300px',
+                background: 'radial-gradient(circle, var(--success) 0%, transparent 70%)',
+                opacity: 0.05,
+                zIndex: 0
+              }}></div>
 
-            {/* Financials Block */}
-            <div className="card glass" style={{ borderLeft: '5px solid var(--success)', background: 'var(--bg)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                <div>
-                  <h4 style={{ marginBottom: '0.5rem' }}>Platform Gross Volume</h4>
-                  <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--success)' }}>₹{stats.totalVolume.toLocaleString()}</div>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+                  <div>
+                    <span style={{
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '1.5px',
+                      color: 'var(--success)',
+                      display: 'block',
+                      marginBottom: '0.5rem'
+                    }}>
+                      Platform Financial Performance
+                    </span>
+                    <h2 style={{ margin: 0, fontSize: '3rem', fontWeight: 800 }}>
+                      ₹{stats.totalVolume.toLocaleString()}
+                    </h2>
+                  </div>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '16px',
+                    background: 'rgba(52, 199, 89, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '2rem'
+                  }}>
+                    💰
+                  </div>
                 </div>
-                <div style={{ fontSize: '2rem', color: 'var(--success)', opacity: 0.8 }}>💰</div>
-              </div>
-            </div>
 
-            {/* Health Block */}
-            <div className="card glass" style={{ borderLeft: '5px solid var(--danger)', background: 'var(--bg)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                <div>
-                  <h4 style={{ marginBottom: '0.5rem' }}>Cancellation Health</h4>
-                  <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--danger)' }}>{stats.cancelledBookings}</div>
-                </div>
-                <div style={{ fontSize: '2rem', color: 'var(--danger)', opacity: 0.8 }}>📉</div>
-              </div>
+                <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                  {/* Cash Card */}
+                  <div style={{
+                    background: 'rgba(22, 101, 52, 0.12)',
+                    padding: '1.5rem',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(34, 197, 94, 0.3)',
+                    transition: 'all 0.3s ease',
+                    backdropFilter: 'blur(10px)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                      <span style={{ fontSize: '1.2rem' }}>💵</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cash In Flow</span>
+                    </div>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#15803d' }}>₹{stats.cashVolume.toLocaleString()}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#166534', opacity: 0.9, marginTop: '4px', fontWeight: 600 }}>Direct cash settlements</div>
+                  </div>
 
-              <div style={{ marginTop: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                  <span>Cancellation Rate</span>
-                  <span style={{ fontWeight: 700 }}>{(stats.cancelledBookings / (stats.bookings || 1) * 100).toFixed(1)}%</span>
+                  {/* Online Card */}
+                  <div style={{
+                    background: 'rgba(30, 64, 175, 0.12)',
+                    padding: '1.5rem',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(37, 99, 235, 0.3)',
+                    transition: 'all 0.3s ease',
+                    backdropFilter: 'blur(10px)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                      <span style={{ fontSize: '1.2rem' }}>💳</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Digital Revenue</span>
+                    </div>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)' }}>₹{stats.onlineVolume.toLocaleString()}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--primary)', opacity: 1, marginTop: '4px', fontWeight: 600 }}>Securely processed via Stripe</div>
+                  </div>
                 </div>
-                <div style={{ width: '100%', height: '8px', background: 'var(--neutral-200)', borderRadius: '10px', overflow: 'hidden' }}>
-                  <div style={{ width: `${(stats.cancelledBookings / (stats.bookings || 1) * 100)}%`, height: '100%', background: 'var(--danger)' }}></div>
-                </div>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '1rem' }}>Target rate: &lt; 5%. High cancellation rates may indicate driver unreliability.</p>
               </div>
             </div>
           </div>

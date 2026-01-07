@@ -93,7 +93,7 @@ const BookingHistory = () => {
           <div className="grid" style={{ gridTemplateColumns: '1fr', gap: '1.5rem' }}>
             {paginatedBookings.map((b, idx) => {
               return (
-                <div key={b.id} className="card glass animate-slide-up" style={{ padding: '1.5rem', animationDelay: `${idx * 0.1}s`, opacity: 0.8 }}>
+                <div key={b.id} className="card glass animate-slide-up" style={{ padding: '1.5rem', animationDelay: `${idx * 0.1}s` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                     <div style={{ flex: 1, minWidth: '250px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -144,11 +144,20 @@ const BookingHistory = () => {
                       )}
 
                       {(b.status === 'COMPLETED' || b.status === 'PAID' || b.status === 'DRIVER_COMPLETED') && (
-                        <button className="btn btn-outline" style={{ marginTop: '0.5rem', width: '100%', fontSize: '0.9rem' }} onClick={() => {
-                          console.log("Opening receipt for:", b);
-                          setReceiptBooking(b);
-                          showToast("Opening Receipt...", "info");
-                        }}>
+                        <button className="btn btn-outline"
+                          style={{
+                            marginTop: '0.5rem',
+                            width: '100%',
+                            fontSize: '0.9rem',
+                            borderColor: 'rgba(0,0,0,0.3)',
+                            color: 'var(--color-text-main)',
+                            fontWeight: 600
+                          }}
+                          onClick={() => {
+                            console.log("Opening receipt for:", b);
+                            setReceiptBooking(b);
+                            showToast("Opening Receipt...", "info");
+                          }}>
                           📄 View Receipt
                         </button>
                       )}

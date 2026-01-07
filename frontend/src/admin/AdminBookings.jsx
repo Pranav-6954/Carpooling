@@ -84,13 +84,13 @@ const AdminBookings = () => {
                         <div className="table-wrapper">
                             <table style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%' }}>
                                 <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-                                    <tr style={{ background: '#1e293b', color: '#f8fafc' }}>
-                                        <th style={{ padding: '1.2rem 1.5rem', width: '18%', textAlign: 'left', borderTopLeftRadius: '0.5rem' }}>Transaction ID</th>
-                                        <th style={{ padding: '1.2rem 1.5rem', width: '18%', textAlign: 'center' }}>Passenger</th>
-                                        <th style={{ padding: '1.2rem 1.5rem', width: '18%', textAlign: 'center' }}>Driver</th>
-                                        <th style={{ padding: '1.2rem 1.5rem', width: '20%', textAlign: 'center' }}>Route</th>
-                                        <th style={{ padding: '1.2rem 1.5rem', width: '14%', textAlign: 'center' }}>Status</th>
-                                        <th style={{ padding: '1.2rem 1.5rem', textAlign: 'center', width: '12%', borderTopRightRadius: '0.5rem' }}>Amount</th>
+                                    <tr style={{ background: '#111827', color: '#ffffff' }}>
+                                        <th style={{ padding: '1.2rem 1.5rem', width: '18%', textAlign: 'left', borderTopLeftRadius: '0.5rem', color: '#ffffff' }}>Transaction ID</th>
+                                        <th style={{ padding: '1.2rem 1.5rem', width: '18%', textAlign: 'center', color: '#ffffff' }}>Passenger</th>
+                                        <th style={{ padding: '1.2rem 1.5rem', width: '18%', textAlign: 'center', color: '#ffffff' }}>Driver</th>
+                                        <th style={{ padding: '1.2rem 1.5rem', width: '20%', textAlign: 'center', color: '#ffffff' }}>Route</th>
+                                        <th style={{ padding: '1.2rem 1.5rem', width: '14%', textAlign: 'center', color: '#ffffff' }}>Status</th>
+                                        <th style={{ padding: '1.2rem 1.5rem', textAlign: 'center', width: '12%', borderTopRightRadius: '0.5rem', color: '#ffffff' }}>Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -100,10 +100,10 @@ const AdminBookings = () => {
                                     {paginated.map((b, idx) => (
                                         <tr key={b.id} style={{ animationDelay: `${idx * 0.05}s` }} className="animate-slide-up">
                                             <td style={{ padding: '1.2rem 1.5rem' }}>
-                                                <div style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--primary)' }}>
+                                                <div style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--text-main)' }}>
                                                     {getTransactionId(b)}
                                                 </div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-main)' }}>
                                                     {b.paymentMethod || "UNKNOWN"}
                                                 </div>
                                             </td>

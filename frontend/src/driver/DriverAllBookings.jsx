@@ -71,20 +71,34 @@ const DriverAllBookings = () => {
         }
     };
 
-    const fetchBookings = () => {
+    const fetchBookings = async () => {
         setLoading(true);
-        apiFetch("/api/bookings/driver", { cache: "no-store" })
-            .then(data => {
-                if (!Array.isArray(data)) {
-                    setBookings([]);
-                } else {
-                    // Sort by newest first
-                    const sorted = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                    setBookings(sorted);
-                }
-            })
-            .catch(err => console.error(err))
-            .finally(() => setLoading(false));
+        try {
+            const [bookingsData, ridesData] = await Promise.all([
+                apiFetch("/api/bookings/driver", { cache: "no-store" }),
+                apiFetch("/api/rides/driver-posts", { cache: "no-store" })
+            ]);
+
+            console.log("Bookings Data:", bookingsData);
+            console.log("Rides Data:", ridesData);
+
+            const validBookings = Array.isArray(bookingsData) ? bookingsData : [];
+            const validRides = Array.isArray(ridesData) ? ridesData : [];
+
+            // Sort by newest
+            const sorted = validBookings.sort((a, b) => {
+                const dateA = new Date(a.createdAt || a.ride?.date || 0);
+                const dateB = new Date(b.createdAt || b.ride?.date || 0);
+                return dateB - dateA;
+            });
+
+            setBookings(sorted);
+        } catch (err) {
+            console.error("Fetch Error in DriverAllBookings:", err);
+            showToast(`Failed to load data: ${err.message}`, 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -155,7 +169,6 @@ const DriverAllBookings = () => {
         if (b.status === "PAID" || b.status === "COMPLETED") return "Payment Completed";
         if (b.status === "ACCEPTED") return "Accepted";
         if (b.status === "PENDING") return "Pending Approval";
-        if (b.status === "EXPIRED") return "Expired";
         return b.status;
     };
 
@@ -175,7 +188,7 @@ const DriverAllBookings = () => {
 
             <div className="flex justify-between items-center mb-6" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    {["ALL", "PENDING", "ACCEPTED", "COMPLETED", "CANCELLED", "EXPIRED"].map(s => (
+                    {["ALL", "PENDING", "ACCEPTED", "COMPLETED", "CANCELLED"].map(s => (
                         <button
                             key={s}
                             className={`btn ${statusFilter === s ? 'btn-primary' : 'btn-outline'}`}
@@ -225,7 +238,7 @@ const DriverAllBookings = () => {
                                             </div>
                                             <div>
                                                 <div style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                    {b.passengers?.[0]?.name || "User"}
+                                                    {(b.passengers?.[0]?.name || "User")}
                                                     <span className="badge badge-warning" style={{ fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '12px' }}>
                                                         {b.userRating > 0 ? `⭐ ${b.userRating.toFixed(1)}` : `⭐ New`}
                                                     </span>
@@ -264,9 +277,11 @@ const DriverAllBookings = () => {
                                                 💵 Confirm Cash
                                             </button>
                                         )}
-                                        <span className={`badge badge-${(b.status === "ACCEPTED" || b.status === "PAID" || b.status === "COMPLETED") ? "success" : b.status === "PENDING" ? "warning" : b.status === "EXPIRED" ? "secondary" : b.status === "DRIVER_COMPLETED" ? "info" : "danger"}`}>
-                                            {getStatusLabel(b)}
-                                        </span>
+                                        {b.status !== "CANCELLED" && b.status !== "REJECTED" && b.status !== "CASH_PAYMENT_PENDING" && (
+                                            <span className={`badge badge-${(b.status === "ACCEPTED" || b.status === "PAID" || b.status === "COMPLETED") ? "success" : b.status === "PENDING" ? "warning" : b.status === "DRIVER_COMPLETED" ? "info" : "danger"}`}>
+                                                {getStatusLabel(b)}
+                                            </span>
+                                        )}
                                         {(b.status === "PENDING" || b.status === "ACCEPTED") && (
                                             <button
                                                 className="btn btn-outline"

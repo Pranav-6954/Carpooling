@@ -6,7 +6,7 @@ const API = import.meta.env.VITE_API_BASE || "http://localhost:8084";
 const Register = () => {
   const [form, setForm] = useState({
     name: "", email: "", password: "", role: "user", confirmPassword: "",
-    gender: "Male", profileImage: "", phone: "", carModel: "",
+    gender: "Male", phone: "", carModel: "",
     licensePlate: "", capacity: 4
   });
   const [msg, setMsg] = useState("");
@@ -125,10 +125,6 @@ const Register = () => {
             </div>
           )}
 
-          <div className="input-group" style={{ marginBottom: '2.5rem' }}>
-            <label className="label">Avatar URL (Optional)</label>
-            <input className="input" type="text" placeholder="https://external-image-link.com" value={form.profileImage} onChange={(e) => setForm({ ...form, profileImage: e.target.value })} />
-          </div>
 
           <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }} disabled={loading}>
             {loading ? "Initializing Profile..." : "Finalize Registration"}

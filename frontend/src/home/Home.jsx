@@ -8,98 +8,69 @@ const Home = () => {
     const user = verifyJWT(token);
 
     return (
-        <div className="container" style={{ paddingBottom: '5rem' }}>
+        <div style={{ paddingBottom: '5rem' }}>
             {/* Hero Section */}
-            <div className="animate-slide-up" style={{
-                textAlign: 'center',
-                padding: '2rem 1rem 3rem 1rem',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                minHeight: '60vh',
-                justifyContent: 'center'
-            }}>
-                <h1 style={{
-                    fontSize: '4rem',
-                    marginBottom: '1.5rem',
-                    background: 'linear-gradient(135deg, var(--primary) 0%, #a5b4fc 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    lineHeight: 1.1,
-                    fontWeight: 900
-                }}>
-                    RideShare
-                </h1>
-                <p style={{
-                    fontSize: '1.5rem',
-                    color: 'var(--text-muted)',
-                    maxWidth: '600px',
-                    marginBottom: '3rem',
-                    lineHeight: 1.6
-                }}>
-                    The smartest way to travel together. Safe, affordable, and eco-friendly carpooling for everyone.
-                </p>
-
-                {/* Action Buttons */}
-                <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                    {!user ? (
-                        <>
-                            <button className="btn btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.2rem' }} onClick={() => nav('/login')}>
-                                Login
+            <header className="hero-light">
+                <div className="container" style={{ padding: 0, maxWidth: '900px' }}>
+                    <div className="animate-slide-up">
+                        <h1 className="hero-title">
+                            Travel Together, <span style={{ color: 'var(--primary)' }}>Travel Better</span>
+                        </h1>
+                        <p className="hero-description">
+                            Connect with travelers heading your way. Split costs, reduce emissions, and make new friends on every journey.
+                        </p>
+                        <div style={{ display: 'flex', gap: '1.25rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                            <button className="btn btn-primary" style={{ padding: '1.2rem 3rem', fontSize: '1.1rem', borderRadius: '16px' }} onClick={() => nav('/user-rides')}>
+                                Find a Ride
                             </button>
-                            <button className="btn btn-outline" style={{ padding: '1rem 2.5rem', fontSize: '1.2rem' }} onClick={() => nav('/register')}>
-                                Sign Up
+                            <button className="btn btn-outline" style={{ padding: '1.2rem 3rem', fontSize: '1.1rem', borderRadius: '16px', background: 'white', borderColor: 'var(--primary)', color: 'var(--primary)' }} onClick={() => nav(user?.role === 'ROLE_DRIVER' ? '/driver-dashboard' : '/register')}>
+                                {user?.role === 'ROLE_DRIVER' ? 'Post a Ride' : 'Offer a Ride'}
                             </button>
-                        </>
-                    ) : (
-                        <div style={{ padding: '1rem', background: 'var(--neutral-50)', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                            Welcome back, <strong>{user.name}</strong>!
                         </div>
-                    )}
+                    </div>
                 </div>
-            </div>
+            </header>
 
-            {/* Main Options */}
-            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '4rem' }}>
+            <div className="container" style={{ position: 'relative' }}>
+                {/* 4-Column Feature Section */}
+                <div className="feature-grid animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                    <div className="feature-card-simple">
+                        <div className="feature-icon-wrapper bg-blue-soft" style={{ borderRadius: '50%' }}>📅</div>
+                        <h3 className="feature-card-title">Easy Booking</h3>
+                        <p className="feature-card-desc">Book rides in seconds with our simple interface</p>
+                    </div>
 
-                {/* Find a Ride */}
-                <div className="card glass animate-slide-up" style={{ padding: '3rem', animationDelay: '0.1s', textAlign: 'center', cursor: 'pointer', transition: 'transform 0.2s' }}
-                    onClick={() => nav('/user-rides')}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚗</div>
-                    <h2 style={{ marginBottom: '1rem' }}>Find a Ride</h2>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                        Book a seat in a reliable car for your next journey. Save money and travel in comfort.
+                    <div className="feature-card-simple">
+                        <div className="feature-icon-wrapper bg-green-soft" style={{ borderRadius: '50%' }}>🤝</div>
+                        <h3 className="feature-card-title">Trusted Community</h3>
+                        <p className="feature-card-desc">Verified drivers and passengers</p>
+                    </div>
+
+                    <div className="feature-card-simple">
+                        <div className="feature-icon-wrapper bg-indigo-soft" style={{ borderRadius: '50%' }}>🛡️</div>
+                        <h3 className="feature-card-title">Safe & Secure</h3>
+                        <p className="feature-card-desc">Your safety is our top priority</p>
+                    </div>
+
+                    <div className="feature-card-simple">
+                        <div className="feature-icon-wrapper bg-purple-soft" style={{ borderRadius: '50%' }}>🎧</div>
+                        <h3 className="feature-card-title">24/7 Support</h3>
+                        <p className="feature-card-desc">We're here whenever you need us</p>
+                    </div>
+                </div>
+
+                {/* Additional Info / CTA */}
+                <div style={{ marginTop: '8rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <h2 className="section-title" style={{ marginBottom: '1.5rem' }}>Ready to Save on Your Next Trip?</h2>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', marginBottom: '3rem', maxWidth: '600px', margin: '0 auto 3rem' }}>
+                        Join thousands of users sharing rides every day.
                     </p>
-                    <button className="btn btn-primary" style={{ width: '100%' }}>Search Rides</button>
+                    <Link to="/why-rideshare" className="nav-item" style={{ fontSize: '1.2rem', borderBottom: '2px solid var(--primary)', paddingBottom: '4px', display: 'inline-block' }}>
+                        Learn more about RideShare
+                    </Link>
                 </div>
-
-                {/* Become a Host */}
-                <div className="card glass animate-slide-up" style={{ padding: '3rem', animationDelay: '0.2s', textAlign: 'center', cursor: 'pointer', transition: 'transform 0.2s' }}
-                    onClick={() => nav(user?.role === 'ROLE_DRIVER' ? '/driver-dashboard' : '/register')}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🤝</div>
-                    <h2 style={{ marginBottom: '1rem' }}>Become a Host</h2>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                        Driving somewhere? Offer your empty seats, cover your fuel costs, and meet new people.
-                    </p>
-                    <button className="btn btn-outline" style={{ width: '100%' }}>
-                        {user?.role === 'ROLE_DRIVER' ? 'Post a Ride' : 'Start Driving'}
-                    </button>
-                </div>
-            </div>
-
-            {/* Secondary Links */}
-            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                <Link to="/why-rideshare" style={{
-                    color: 'var(--text-muted)',
-                    textDecoration: 'none',
-                    borderBottom: '1px dashed var(--text-muted)',
-                    fontSize: '1.1rem'
-                }}>
-                    Why choose RideShare?
-                </Link>
             </div>
         </div>
     );
 };
-
 export default Home;

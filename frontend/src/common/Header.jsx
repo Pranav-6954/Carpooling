@@ -60,10 +60,17 @@ const Header = ({ isDark, toggleTheme }) => {
   };
 
   return (
-    <nav className="navbar glass" style={{ position: 'sticky', top: 0, zIndex: 1000, padding: '0.75rem 2rem' }}>
-      <div className="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }} onClick={() => navigate("/")}>
-        <div style={{ padding: '8px', background: 'var(--primary)', borderRadius: '12px', color: 'white', fontWeight: 900 }}>RS</div>
-        <strong style={{ fontSize: '1.25rem', letterSpacing: '-0.5px' }}>RideShare</strong>
+    <nav className="navbar glass" style={{
+      position: 'sticky',
+      top: 0,
+      zIndex: 1000,
+      padding: '1rem 3rem',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+      height: '70px'
+    }}>
+      <div className="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }} onClick={() => navigate("/")}>
+        <img src="/logo.png" alt="RideShare Logo" style={{ height: '45px', width: 'auto', objectFit: 'contain' }} />
+        <strong style={{ fontSize: '1.5rem', letterSpacing: '-0.8px', color: 'var(--text-main)' }}>RideShare</strong>
       </div>
 
       <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
@@ -163,7 +170,7 @@ const Header = ({ isDark, toggleTheme }) => {
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user.role?.replace('ROLE_', '')}</div>
               </div>
-              <button onClick={handleLogout} className="btn btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Logout</button>
+              <button onClick={handleLogout} className="btn btn-outline btn-logout" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Logout</button>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: '0.75rem' }}>

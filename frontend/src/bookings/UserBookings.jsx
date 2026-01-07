@@ -189,7 +189,7 @@ const UserBookings = () => {
         <div className="card glass animate-slide-up" style={{ textAlign: 'center', padding: '5rem 2rem' }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚗</div>
           <h3>No journeys found</h3>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Start your adventure by booking a ride today.</p>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', marginLeft: 'auto', marginRight: 'auto' }}>Start your adventure by booking a ride today.</p>
           <button className="btn btn-primary" onClick={() => window.location.href = '/user-rides'}>Find a Ride</button>
         </div>
       ) : (
@@ -249,7 +249,7 @@ const UserBookings = () => {
 
                       {/* Stripe Payment Button - UPDATED for Real-time Payment on Accept */}
                       {((b.status === 'ACCEPTED' || b.status === 'PAYMENT_PENDING' || b.status === 'DRIVER_COMPLETED') && b.paymentMethod !== 'CASH') && (
-                        <button className="btn btn-warning" onClick={() => nav('/payment', { state: { amount: b.totalPrice, bookingId: b.id } })}>
+                        <button className="btn btn-primary" onClick={() => nav('/payment', { state: { amount: b.totalPrice, bookingId: b.id } })}>
                           💳 Pay ₹{b.totalPrice}
                         </button>
                       )}

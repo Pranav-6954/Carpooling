@@ -71,14 +71,14 @@ const AdminReports = () => {
                     <div className="card glass animate-slide-up" style={{ padding: 0, overflow: 'hidden' }}>
                         <div className="table-wrapper">
                             <table>
-                                <thead style={{ background: '#1f2937', color: 'white' }}>
+                                <thead style={{ background: '#111827', color: '#ffffff' }}>
                                     <tr>
-                                        <th style={{ padding: '1rem' }}>ID</th>
-                                        <th style={{ padding: '1rem' }}>Reporter</th>
-                                        <th style={{ padding: '1rem' }}>Against</th>
-                                        <th style={{ padding: '1rem' }}>Reason</th>
-                                        <th style={{ padding: '1rem' }}>Status</th>
-                                        <th style={{ padding: '1rem' }}>Actions</th>
+                                        <th style={{ padding: '1rem', color: '#ffffff' }}>ID</th>
+                                        <th style={{ padding: '1rem', color: '#ffffff' }}>Reporter</th>
+                                        <th style={{ padding: '1rem', color: '#ffffff' }}>Against</th>
+                                        <th style={{ padding: '1rem', color: '#ffffff' }}>Reason</th>
+                                        <th style={{ padding: '1rem', color: '#ffffff' }}>Status</th>
+                                        <th style={{ padding: '1rem', color: '#ffffff' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>

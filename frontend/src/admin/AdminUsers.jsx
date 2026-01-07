@@ -205,17 +205,17 @@ const AdminUsers = () => {
                   position: 'sticky',
                   top: 0,
                   zIndex: 10,
-                  background: '#1f2937',
+                  background: '#111827',
                   color: '#ffffff',
                   boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}>
                   <tr>
-                    <th style={{ width: '25%', padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Identity</th>
-                    <th style={{ width: '15%', padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Role</th>
-                    <th style={{ width: '15%', padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Reputation</th>
-                    <th style={{ width: '15%', padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Status</th>
-                    <th style={{ width: '15%', padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Privileges</th>
-                    <th style={{ textAlign: 'center', padding: '1rem', fontWeight: 'bold' }}>Actions</th>
+                    <th style={{ width: '25%', padding: '1rem', textAlign: 'left', fontWeight: 'bold', color: '#ffffff' }}>Identity</th>
+                    <th style={{ width: '15%', padding: '1rem', textAlign: 'center', fontWeight: 'bold', color: '#ffffff' }}>Role</th>
+                    <th style={{ width: '15%', padding: '1rem', textAlign: 'center', fontWeight: 'bold', color: '#ffffff' }}>Reputation</th>
+                    <th style={{ width: '15%', padding: '1rem', textAlign: 'center', fontWeight: 'bold', color: '#ffffff' }}>Status</th>
+                    <th style={{ width: '15%', padding: '1rem', textAlign: 'center', fontWeight: 'bold', color: '#ffffff' }}>Privileges</th>
+                    <th style={{ textAlign: 'center', padding: '1rem', fontWeight: 'bold', color: '#ffffff' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>

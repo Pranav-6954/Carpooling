@@ -147,14 +147,14 @@ const VehiclesList = () => {
           <div className="table-wrapper">
             <table style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%' }}>
               <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-                <tr style={{ background: '#1e293b', color: '#f8fafc' }}>
-                  <th style={{ width: '18%', padding: '1.2rem 1.5rem', textAlign: 'left', borderTopLeftRadius: '0.5rem' }}>Driver Info</th>
-                  <th style={{ width: '15%', padding: '1.2rem 1.5rem', textAlign: 'center' }}>Car Name</th>
-                  <th style={{ width: '18%', padding: '1.2rem 1.5rem', textAlign: 'center' }}>Path</th>
-                  <th style={{ width: '13%', padding: '1.2rem 1.5rem', textAlign: 'center' }}>Schedule</th>
-                  <th style={{ width: '12%', padding: '1.2rem 1.5rem', textAlign: 'center' }}>Capacity</th>
-                  <th style={{ width: '12%', padding: '1.2rem 1.5rem', textAlign: 'center' }}>Economy</th>
-                  <th style={{ width: '14%', textAlign: 'center', padding: '1.2rem 1.5rem', borderTopRightRadius: '0.5rem' }}>Ride Status</th>
+                <tr style={{ background: '#111827', color: '#ffffff' }}>
+                  <th style={{ width: '18%', padding: '1.2rem 1.5rem', textAlign: 'left', borderTopLeftRadius: '0.5rem', color: '#ffffff' }}>Driver Info</th>
+                  <th style={{ width: '15%', padding: '1.2rem 1.5rem', textAlign: 'center', color: '#ffffff' }}>Car Name</th>
+                  <th style={{ width: '18%', padding: '1.2rem 1.5rem', textAlign: 'center', color: '#ffffff' }}>Path</th>
+                  <th style={{ width: '13%', padding: '1.2rem 1.5rem', textAlign: 'center', color: '#ffffff' }}>Schedule</th>
+                  <th style={{ width: '12%', padding: '1.2rem 1.5rem', textAlign: 'center', color: '#ffffff' }}>Capacity</th>
+                  <th style={{ width: '12%', padding: '1.2rem 1.5rem', textAlign: 'center', color: '#ffffff' }}>Economy</th>
+                  <th style={{ width: '14%', textAlign: 'center', padding: '1.2rem 1.5rem', borderTopRightRadius: '0.5rem', color: '#ffffff' }}>Ride Status</th>
                 </tr>
               </thead>
               <tbody>

@@ -142,7 +142,7 @@ const DriverDashboard = () => {
             // "My Active Rides" title might need change if we show everything.
             // But let's stick to showing: OPEN, and if OPEN + Past Date -> Treat as Expired.
 
-            setMyRides(rideData.filter(r => r.status === "OPEN" || r.status === "EXPIRED"));
+            setMyRides(rideData.filter(r => r.status === "OPEN"));
 
             // Fetch My Reviews
             const reviewData = await apiFetch(`/api/reviews/user/${user.email}`);
@@ -363,14 +363,7 @@ const DriverDashboard = () => {
                                     </td>
                                     <td className="text-success font-bold" style={{ padding: '1rem', color: 'var(--success)' }}>₹{r.price}</td>
                                     <td style={{ padding: '1rem' }}>
-                                        {(() => {
-                                            const rideDate = new Date(r.date);
-                                            const isExpired = rideDate < new Date().setHours(0, 0, 0, 0);
-
-                                            if (r.tickets === 0) return <div className="badge badge-error">Sold Out</div>;
-                                            if (isExpired && r.status === "OPEN") return <div className="badge badge-secondary">Expired</div>;
-                                            return <div className="badge">{r.tickets} Left</div>;
-                                        })()}
+                                        <div className="badge">{r.tickets} Left</div>
                                     </td>
                                     <td style={{ textAlign: 'right', paddingRight: '1.5rem', padding: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                                         <button className="btn btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleCompleteRide(r.id)}>

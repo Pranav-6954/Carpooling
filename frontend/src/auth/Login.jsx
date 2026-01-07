@@ -14,10 +14,12 @@ const Login = () => {
   useEffect(() => {
     const user = verifyJWT();
     if (user) {
-      if (user.role === "ROLE_ADMIN") nav("/dashboard");
-      else if (user.role === "ROLE_DRIVER") nav("/driver-dashboard");
-      else if (user.role === "ROLE_USER") nav("/user-rides");
-      // If none of the above, stay on login or wait for explicit action
+      let role = user.role?.toUpperCase() || "";
+      if (!role.startsWith("ROLE_")) role = "ROLE_" + role;
+
+      if (role === "ROLE_ADMIN") nav("/dashboard");
+      else if (role === "ROLE_DRIVER") nav("/driver-dashboard");
+      else if (role === "ROLE_USER") nav("/user-rides");
     }
   }, [nav]);
 
@@ -40,7 +42,10 @@ const Login = () => {
       }
 
       saveToken(data.token);
-      const role = data.role?.toUpperCase();
+      saveToken(data.token);
+      let role = data.role?.toUpperCase() || "";
+      if (!role.startsWith("ROLE_")) role = "ROLE_" + role;
+
       if (role === "ROLE_ADMIN") nav("/dashboard");
       else if (role === "ROLE_DRIVER") nav("/driver-dashboard");
       else if (role === "ROLE_USER") nav("/user-rides");
