@@ -175,28 +175,37 @@ public class AdminController {
         long cancelledBookings = bookingService.allBookings().stream()
                 .filter(b -> "CANCELLED".equals(b.getStatus()) || "REJECTED".equals(b.getStatus())).count();
 
-        double totalEarnings = bookingService.allBookings().stream()
-                .filter(b -> "COMPLETED".equals(b.getStatus()) || "PAID".equals(b.getStatus()) || "ACCEPTED".equals(b.getStatus())) // Simplified: Count accepted/paid as earnings for now
+        double totalVolume = bookingService.allBookings().stream()
+                .filter(b -> "COMPLETED".equals(b.getStatus()) || "PAID".equals(b.getStatus()) || "ACCEPTED".equals(b.getStatus()))
                 .mapToDouble(b -> b.getTotalPrice() != null ? b.getTotalPrice() : 0.0)
                 .sum();
+
+        // Calculate breakdown based on inclusive total (Total = Base * 1.07)
+        // Base = Total / 1.07
+        double baseVolume = totalVolume / 1.07;
+        double netRevenue = baseVolume * 0.02; // 2% Platform Fee
+        double gstLiability = baseVolume * 0.05; // 5% GST
 
         double cashVolume = bookingService.allBookings().stream()
                 .filter(b -> "CASH".equalsIgnoreCase(b.getPaymentMethod()) && ("COMPLETED".equals(b.getStatus()) || "ACCEPTED".equals(b.getStatus())))
                 .mapToDouble(b -> b.getTotalPrice() != null ? b.getTotalPrice() : 0.0)
                 .sum();
         
-        double onlineVolume = totalEarnings - cashVolume;
+        double onlineVolume = totalVolume - cashVolume;
 
-        return ResponseEntity.ok(Map.of(
-            "userCount", userCount,
-            "driverCount", driverCount,
-            "blockedCount", blockedCount,
-            "totalBookings", totalBookings,
-            "cancelledBookings", cancelledBookings,
-            "totalEarnings", totalEarnings,
-            "cashVolume", cashVolume,
-            "onlineVolume", onlineVolume,
-            "totalRides", totalRides));
+        return ResponseEntity.ok(Map.ofEntries(
+            Map.entry("userCount", userCount),
+            Map.entry("driverCount", driverCount),
+            Map.entry("blockedCount", blockedCount),
+            Map.entry("totalBookings", totalBookings),
+            Map.entry("cancelledBookings", cancelledBookings),
+            Map.entry("totalVolume", totalVolume),
+            Map.entry("netRevenue", netRevenue),
+            Map.entry("gstLiability", gstLiability),
+            Map.entry("cashVolume", cashVolume),
+            Map.entry("onlineVolume", onlineVolume),
+            Map.entry("totalRides", totalRides)
+        ));
     }
 
     @PostMapping("/users/fix-payment-data")

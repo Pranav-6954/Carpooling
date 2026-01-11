@@ -54,7 +54,7 @@ public class UserService {
             throw new RuntimeException("Invalid credentials");
         if ("ROLE_PENDING-ADMIN".equals(u.getRole()))
             throw new RuntimeException("Admin approval pending");
-        return jwtUtil.generateToken(u.getEmail(), u.getRole(), u.isSuperAdmin());
+        return jwtUtil.generateToken(u.getEmail(), u.getRole(), u.isSuperAdmin(), u.isVerified() != null && u.isVerified());
     }
 
     public Optional<User> findByEmail(String email) {

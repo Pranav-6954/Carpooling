@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.mail.javamail.JavaMailSender;
+import java.util.Map;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -103,38 +104,28 @@ public class EmailService {
         html.append("        </tr>");
         html.append("    </table>");
 
+        Map<String, Double> breakdown = FareService.getFareBreakdown(booking.getTotalPrice());
+
         html.append("    <table style='width: 100%; border-collapse: collapse; margin-bottom: 20px;'>");
         html.append("        <tr style='background-color: #f8fafc; color: #1e293b;'>");
         html.append("            <th style='text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0;'>Description</th>");
         html.append("            <th style='text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0;'>Details</th>");
         html.append("        </tr>");
-        html.append("        <tr>");
-        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>Source</td>");
-        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>").append(booking.getPickupLocation()).append("</td>");
-        html.append("        </tr>");
-        html.append("        <tr>");
-        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>Destination</td>");
-        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>").append(booking.getDropoffLocation()).append("</td>");
-        html.append("        </tr>");
-        html.append("        <tr>");
-        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>Payment Method</td>");
-        String pMethod = booking.getPaymentMethod();
-        if (pMethod == null) pMethod = "N/A";
-        else if (pMethod.toUpperCase().contains("STRIPE") || pMethod.toUpperCase().contains("ONLINE")) pMethod = "Online (Stripe)";
-        else if (pMethod.toUpperCase().contains("CASH")) pMethod = "Cash";
-        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>").append(pMethod).append("</td>");
-        html.append("        </tr>");
-        html.append("        <tr>");
-        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>Seats</td>");
-        html.append("            <td style='padding: 12px; border-bottom: 1px solid #eee;'>").append(booking.getSeats()).append("</td>");
-        html.append("        </tr>");
+        html.append("        <tr><td style='padding: 12px; border-bottom: 1px solid #eee;'>Source</td><td style='padding: 12px; border-bottom: 1px solid #eee;'>").append(booking.getPickupLocation()).append("</td></tr>");
+        html.append("        <tr><td style='padding: 12px; border-bottom: 1px solid #eee;'>Destination</td><td style='padding: 12px; border-bottom: 1px solid #eee;'>").append(booking.getDropoffLocation()).append("</td></tr>");
+        html.append("        <tr><td style='padding: 12px; border-bottom: 1px solid #eee;'>Seats</td><td style='padding: 12px; border-bottom: 1px solid #eee;'>").append(booking.getSeats()).append("</td></tr>");
         html.append("    </table>");
 
-        html.append("    <div style='border-top: 2px solid #eee; padding-top: 15px;'>");
-        html.append("        <div style='display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1em;'>");
-        html.append("            <span>Total Paid</span>");
-        html.append("            <span>Rs. ").append(amount).append("</span>");
-        html.append("        </div>");
+        html.append("    <div style='background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;'>");
+        html.append("        <h3 style='margin-top: 0; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;'>Payment Breakdown</h3>");
+        html.append("        <table style='width: 100%; font-size: 0.95em;'>");
+        html.append("            <tr><td style='padding: 5px 0;'>Base Ride Fare</td><td style='text-align: right;'>Rs. ").append(String.format("%.2f", breakdown.get("base"))).append("</td></tr>");
+        html.append("            <tr><td style='padding: 5px 0;'>GST (5%)</td><td style='text-align: right;'>Rs. ").append(String.format("%.2f", breakdown.get("gst"))).append("</td></tr>");
+        html.append("            <tr><td style='padding: 5px 0;'>Platform Fee (2%)</td><td style='text-align: right;'>Rs. ").append(String.format("%.2f", breakdown.get("platformFee"))).append("</td></tr>");
+        html.append("            <tr style='font-weight: bold; font-size: 1.1em; color: #2563eb;'>");
+        html.append("                <td style='padding: 15px 0 0;'>Total Paid</td><td style='text-align: right; padding: 15px 0 0;'>Rs. ").append(amount).append("</td>");
+        html.append("            </tr>");
+        html.append("        </table>");
         html.append("    </div>");
 
         html.append("    <div style='margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ccc; text-align: center; color: #888; font-size: 0.9em;'>");
@@ -146,6 +137,47 @@ public class EmailService {
 
         String subject = "Payment Receipt: Rs. " + amount;
         sendHtmlEmail(to, subject, html.toString());
+    }
+
+    public void sendDriverEarningsEmail(String toEmail, com.example.backend.model.Booking booking, com.example.backend.model.User passenger) {
+        String receiptNo = "ERN-" + booking.getId();
+        String date = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy"));
+        Map<String, Double> breakdown = FareService.getFareBreakdown(booking.getTotalPrice());
+        double netEarnings = breakdown.get("base") - breakdown.get("platformFee");
+
+        StringBuilder html = new StringBuilder();
+        html.append("<html><body style='font-family: Arial, sans-serif; color: #333;'>");
+        html.append("<div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;'>");
+        html.append("    <div style='border-bottom: 2px solid #22c55e; padding-bottom: 15px; margin-bottom: 20px;'>");
+        html.append("        <h1 style='color: #22c55e; margin: 0;'>RideShare Partner</h1>");
+        html.append("        <p style='margin: 5px 0 0; color: #666;'>Earnings Receipt</p>");
+        html.append("    </div>");
+
+        html.append("    <div style='margin-bottom: 20px;'>");
+        html.append("        <p><strong>Partner Details:</strong><br/>").append(toEmail).append("</p>");
+        html.append("        <p style='text-align: right; margin-top: -45px;'><strong>Receipt No:</strong> ").append(receiptNo).append("<br/><strong>Date:</strong> ").append(date).append("</p>");
+        html.append("    </div>");
+
+        html.append("    <table style='width: 100%; border-collapse: collapse; margin-bottom: 20px;'>");
+        html.append("        <tr style='background-color: #22c55e; color: white;'>");
+        html.append("            <th style='padding: 10px; text-align: left;'>Trip Details</th><th style='padding: 10px; text-align: left;'>Value</th>");
+        html.append("        </tr>");
+        html.append("        <tr><td style='padding: 10px; border-bottom: 1px solid #eee;'>Route</td><td style='padding: 10px; border-bottom: 1px solid #eee;'>").append(booking.getPickupLocation()).append(" → ").append(booking.getDropoffLocation()).append("</td></tr>");
+        html.append("        <tr><td style='padding: 10px; border-bottom: 1px solid #eee;'>Passenger</td><td style='padding: 10px; border-bottom: 1px solid #eee;'>").append(passenger.getName()).append("</td></tr>");
+        html.append("        <tr><td style='padding: 10px; border-bottom: 1px solid #eee;'>Seats Booked</td><td style='padding: 10px; border-bottom: 1px solid #eee;'>").append(booking.getSeats()).append("</td></tr>");
+        html.append("    </table>");
+
+        html.append("    <div style='margin-top: 20px;'>");
+        html.append("        <h4 style='color: #1e293b; margin-bottom: 10px;'>Earnings Breakdown</h4>");
+        html.append("        <div style='display: flex; justify-content: space-between; margin-bottom: 8px;'><span>Total Fare Collected</span><span>Rs. ").append(String.format("%.2f", booking.getTotalPrice())).append("</span></div>");
+        html.append("        <div style='display: flex; justify-content: space-between; margin-bottom: 8px; color: #ef4444;'><span>Less: Platform Fee & Tax (7%)</span><span>- Rs. ").append(String.format("%.2f", booking.getTotalPrice() - netEarnings)).append("</span></div>");
+        html.append("        <div style='display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2em; color: #22c55e; border-top: 2px solid #eee; padding-top: 10px;'><span>NET EARNINGS</span><span>Rs. ").append(String.format("%.2f", netEarnings)).append("</span></div>");
+        html.append("    </div>");
+
+        html.append("    <div style='margin-top: 30px; text-align: center; color: #888; font-size: 0.85em;'>感谢您成为 RideShare 合作伙伴！<br/>- RideShare Team</div>");
+        html.append("</div></body></html>");
+
+        sendHtmlEmail(toEmail, "Earnings Receipt: Rs. " + String.format("%.2f", netEarnings), html.toString());
     }
 
     private String formatTo12Hour(String time) {

@@ -22,13 +22,15 @@ public class RideController {
     private final com.example.backend.service.ReviewService reviewService;
     private final BookingService bookingService;
     private final com.example.backend.service.NotificationService notificationService;
+    private final com.example.backend.service.UserService userService;
 
-    public RideController(RideService service, FareService fareService, com.example.backend.service.ReviewService reviewService, BookingService bookingService, com.example.backend.service.NotificationService notificationService) {
+    public RideController(RideService service, FareService fareService, com.example.backend.service.ReviewService reviewService, BookingService bookingService, com.example.backend.service.NotificationService notificationService, com.example.backend.service.UserService userService) {
         this.service = service;
         this.fareService = fareService;
         this.reviewService = reviewService;
         this.bookingService = bookingService;
         this.notificationService = notificationService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -76,6 +78,14 @@ public class RideController {
 
         if (!isAdmin && !isDriver) {
             return ResponseEntity.status(403).body(Map.of("error", "Admin or Driver required"));
+        }
+        
+        // Driver Verification Check
+        if (isDriver && !isAdmin) {
+             com.example.backend.model.User currentUser = userService.findByEmail(auth.getName()).orElse(null);
+             if (currentUser != null && (currentUser.isVerified() == null || !currentUser.isVerified())) {
+                 return ResponseEntity.status(403).body(Map.of("error", "Driver verification pending. Please wait for admin approval."));
+             }
         }
 
         // Validate Price against FareService

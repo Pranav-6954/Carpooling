@@ -25,40 +25,40 @@ public class PaymentController {
     }
 
     @PostMapping("/create-payment-intent")
-    public Map<String, String> createPaymentIntent(@RequestBody Map<String, Object> data,
-            org.springframework.security.core.Authentication auth) throws StripeException {
-        System.out.println("PaymentController: Request received to create intent. Data: " + data);
-        Integer amountINR = Integer.parseInt(data.getOrDefault("amount", 100).toString());
-        if (amountINR < 1)
-            amountINR = 1; // Stripe minimum is ~₹0.50, but let's be safe
+    public ResponseEntity<?> createPaymentIntent(@RequestBody Map<String, Object> data,
+            org.springframework.security.core.Authentication auth) {
+        try {
+            System.out.println("PaymentController: Request received. Data: " + data);
+            Double amountINR = Double.parseDouble(data.getOrDefault("amount", 100).toString());
+            if (amountINR < 0.5) amountINR = 0.5; // Stripe minimum in INR is roughly 50 paise
 
-        Long bookingId = data.containsKey("bookingId") ? Long.parseLong(data.get("bookingId").toString()) : null;
-        String userEmail = (auth != null) ? auth.getName() : "anonymous";
-        System.out.println("PaymentController: Creating intent for Email: " + userEmail + ", Amount: " + amountINR
-                + ", BookingId: " + bookingId);
+            Long bookingId = data.containsKey("bookingId") ? Long.parseLong(data.get("bookingId").toString()) : null;
+            String userEmail = (auth != null) ? auth.getName() : "anonymous";
+            System.out.println("PaymentController: Creating intent for Email: " + userEmail + ", Amount: " + amountINR
+                    + ", BookingId: " + bookingId);
 
-        long amountInPaise = amountINR * 100L;
-        System.out.println("PaymentController: Amount in Paise: " + amountInPaise);
+            long amountInPaise = Math.round(amountINR * 100.0);
+            PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+                    .setAmount(amountInPaise)
+                    .setCurrency("inr")
+                    .setDescription("Ride Booking Payment")
+                    .setAutomaticPaymentMethods(
+                            PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
+                                    .setEnabled(true)
+                                    .build())
+                    .build();
 
-        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setAmount(amountInPaise)
-                .setCurrency("inr")
-                .setDescription("Ride Booking Payment")
-                .setAutomaticPaymentMethods(
-                        PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
-                                .setEnabled(true)
-                                .build())
-                .build();
+            PaymentIntent paymentIntent = PaymentIntent.create(params);
+            paymentService.logPaymentIntent(bookingId, userEmail, (double) amountINR, paymentIntent.getId());
 
-        PaymentIntent paymentIntent = PaymentIntent.create(params);
-
-        // PERSISTENCE: Log the intent in our database
-        paymentService.logPaymentIntent(bookingId, userEmail, (double) amountINR, paymentIntent.getId());
-
-        Map<String, String> response = new HashMap<>();
-        response.put("clientSecret", paymentIntent.getClientSecret());
-
-        return response;
+            Map<String, String> response = new HashMap<>();
+            response.put("clientSecret", paymentIntent.getClientSecret());
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            System.err.println("PaymentController ERROR: " + ex.getMessage());
+            ex.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Internal Server Error: " + ex.getMessage()));
+        }
     }
 
 

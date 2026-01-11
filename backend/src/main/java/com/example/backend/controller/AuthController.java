@@ -65,6 +65,7 @@ public class AuthController {
                     "email", u.getEmail(),
                     "role", u.getRole(),
                     "name", u.getName(),
+                    "verified", u.isVerified() != null && u.isVerified(),
                     "profileImage", u.getProfileImage() != null ? u.getProfileImage() : ""));
         } catch (Exception ex) {
             return ResponseEntity.status(401).body(Map.of("error", ex.getMessage()));
@@ -82,6 +83,7 @@ public class AuthController {
                 "name", u.getName(),
                 "role", u.getRole(),
                 "superAdmin", u.isSuperAdmin(),
+                "verified", u.isVerified() != null && u.isVerified(),
                 "profileImage", u.getProfileImage() != null ? u.getProfileImage() : "",
                 "phone", u.getPhone() != null ? u.getPhone() : "",
                 "carModel", u.getCarModel() != null ? u.getCarModel() : "",

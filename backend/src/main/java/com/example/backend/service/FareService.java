@@ -95,4 +95,20 @@ public class FareService {
         // Ensure minimum fare (e.g., 20% of full price)
         return Math.max(estimatedPrice, fullRoutePrice * 0.2);
     }
+
+    // Helper for Option A: Inclusive Breakdown calculation
+    public static Map<String, Double> getFareBreakdown(double totalPrice) {
+        // Option A: Total is inclusive of 5% GST and 2% Platform Fee (Total = Base * 1.07)
+        double baseFare = totalPrice / 1.07;
+        double gst = baseFare * 0.05;
+        double platformFee = baseFare * 0.02;
+
+        // Round all to 2 decimals
+        return Map.of(
+            "base", Math.round(baseFare * 100.0) / 100.0,
+            "gst", Math.round(gst * 100.0) / 100.0,
+            "platformFee", Math.round(platformFee * 100.0) / 100.0,
+            "total", Math.round(totalPrice * 100.0) / 100.0
+        );
+    }
 }
