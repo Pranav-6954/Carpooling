@@ -91,9 +91,16 @@ const DriverHistory = () => {
             <div className="grid grid-cols-2 gap-6 mb-8">
                 <div className="card glass p-6 text-center">
                     <h3 className="text-success" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
-                        ₹{bookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0)}
+                        ₹{bookings.reduce((sum, b) => {
+                            const base = (b.totalPrice || 0) / 1.07;
+                            const pf = base * 0.02;
+                            return sum + (base - pf);
+                        }, 0).toFixed(2)}
                     </h3>
-                    <p className="text-muted text-xs uppercase font-bold">Total Earnings</p>
+                    <p className="text-muted text-xs uppercase font-bold">Total Net Earnings</p>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        After 2% Platform Fee & GST deductions
+                    </div>
                 </div>
                 <div className="card glass p-6 text-center">
                     <h3 className="text-primary" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
@@ -137,7 +144,8 @@ const DriverHistory = () => {
                                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Date</th>
                                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Passenger</th>
                                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Route</th>
-                                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Amount</th>
+                                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Collected Fare</th>
+                                    <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Net Earnings (Payout)</th>
                                     <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold' }}>Method</th>
                                     <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Status</th>
                                     <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold' }}>Actions</th>
@@ -164,8 +172,11 @@ const DriverHistory = () => {
                                         <td style={{ padding: '1rem' }}>
                                             {b.ride?.fromLocation} &rarr; {b.ride?.toLocation}
                                         </td>
-                                        <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--success)' }}>
+                                        <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                                             ₹{b.totalPrice}
+                                        </td>
+                                        <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--success)' }}>
+                                            ₹{((b.totalPrice / 1.07) * 0.98).toFixed(2)}
                                         </td>
                                         <td style={{ padding: '1rem' }}>
                                             <span className={`badge ${b.paymentMethod === 'CASH' ? 'badge-success' : 'badge-primary'}`}>

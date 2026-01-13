@@ -20,6 +20,7 @@ const UserBookings = () => {
   const [reporting, setReporting] = useState(null);
   const [reportReason, setReportReason] = useState("");
   const [reportDesc, setReportDesc] = useState("");
+  const [showBreakdown, setShowBreakdown] = useState(null); // id of booking showing breakdown
 
   // Confirm Modal State
   const [confirmModal, setConfirmModal] = useState({
@@ -233,8 +234,36 @@ const UserBookings = () => {
                       <div style={{ display: 'flex', gap: '1.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                         <div><strong>Date:</strong> {b.ride?.date}</div>
                         <div><strong>Seats:</strong> {b.seats}</div>
-                        <div style={{ color: 'var(--primary)', fontWeight: 600 }}>Total: ₹{b.totalPrice}</div>
+                        <div style={{ color: 'var(--primary)', fontWeight: 600 }}>Total Paid: ₹{b.totalPrice}</div>
+                        <button
+                          className="btn btn-ghost"
+                          style={{ padding: '0 4px', fontSize: '0.75rem', height: 'auto', color: 'var(--primary)', textDecoration: 'underline' }}
+                          onClick={() => setShowBreakdown(showBreakdown === b.id ? null : b.id)}
+                        >
+                          {showBreakdown === b.id ? "Hide Breakdown" : "View Receipt Details"}
+                        </button>
                       </div>
+
+                      {showBreakdown === b.id && (
+                        <div className="animate-slide-up" style={{ marginTop: '1rem', padding: '1rem', background: 'var(--neutral-50)', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.85rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ color: 'var(--text-muted)' }}>Base Ride Fare</span>
+                            <span>₹{(b.totalPrice / 1.07).toFixed(2)}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                            <span style={{ color: 'var(--text-muted)' }}>GST (5%)</span>
+                            <span>₹{(b.totalPrice / 1.07 * 0.05).toFixed(2)}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <span style={{ color: 'var(--text-muted)' }}>Platform Fee (2%)</span>
+                            <span>₹{(b.totalPrice / 1.07 * 0.02).toFixed(2)}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, borderTop: '1px solid var(--border)', paddingTop: '6px' }}>
+                            <span>Total</span>
+                            <span style={{ color: 'var(--primary)' }}>₹{b.totalPrice.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

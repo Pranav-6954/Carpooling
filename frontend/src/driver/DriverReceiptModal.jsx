@@ -137,12 +137,20 @@ const DriverReceiptModal = ({ isOpen, onClose, booking }) => {
                 </table>
 
                 {/* Earnings Breakdown */}
-                <div style={{ marginBottom: '20px' }}>
+                <div style={{ marginBottom: '20px', background: '#f8fafc', padding: '15px', borderRadius: '6px' }}>
                     <h4 style={{ margin: '0 0 15px', color: '#333' }}>Earnings Breakdown</h4>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', color: '#555' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: '#555' }}>
                         <span>Total Fare Collected</span>
                         <span>Rs. {totalFare.toFixed(2)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '14px', color: '#ef4444' }}>
+                        <span>Less: Platform Fee & Tax (7%)</span>
+                        <span>- Rs. {(totalFare - (totalFare / 1.07 * 0.98)).toFixed(2)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '18px', color: '#10b981', borderTop: '2px solid #eee', paddingTop: '10px' }}>
+                        <span>Net Payout</span>
+                        <span>Rs. {(totalFare / 1.07 * 0.98).toFixed(2)}</span>
                     </div>
                 </div>
 

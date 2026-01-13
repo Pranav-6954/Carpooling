@@ -278,6 +278,29 @@ export default function PaymentPage() {
 
     return (
         <div className="container" style={{ paddingTop: "4rem", paddingBottom: "5rem" }}>
+            {/* CSS to hide Stripe and Razorpay branding for cleaner screenshots */}
+            <style>{`
+                .StripeElement { width: 100%; }
+                /* Aggressively hide branding elements by position and class */
+                .stripe-badge, .StripeBadge, .powered-by-stripe, 
+                #razorpay-affordability-widget, .razorpay-logo,
+                [id^="__stripe_transport_"],
+                [class*="PoweredByStripe"],
+                iframe[src*="stripe.com/badge"],
+                iframe[src*="razorpay.com"] {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    height: 0 !important;
+                    width: 0 !important;
+                    pointer-events: none !important;
+                }
+                /* Generic kill-switch for floating badges at bottom right */
+                body > iframe[style*="bottom"][style*="right"],
+                body > div[style*="bottom"][style*="right"] {
+                    display: none !important;
+                }
+            `}</style>
             {/* Show Error if exists */}
             {error ? (
                 <div style={{ textAlign: "center", marginTop: "8rem" }}>

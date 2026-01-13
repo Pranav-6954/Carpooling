@@ -33,6 +33,7 @@ export const verifyJWT = (token) => {
       return r;
     })(),
     superAdmin: !!info.superAdmin,
+    verified: info.verified !== undefined ? info.verified : false,
     name: info.name || info.user?.name,
     exp: exp || info.exp,
   };

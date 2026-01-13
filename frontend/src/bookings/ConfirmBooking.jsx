@@ -109,7 +109,7 @@ const ConfirmBooking = () => {
             </div>
 
             <div className="input-group" style={{ marginBottom: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
                   <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>Your Fair Offer</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>Negotiated Segment Price</div>
@@ -126,6 +126,27 @@ const ConfirmBooking = () => {
                   />
                 </div>
               </div>
+
+              {/* New Itemized Breakdown logic for Option A */}
+              <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '1rem', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.85rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Base Ride Fare</span>
+                  <span>₹{(offerPrice / 1.07).toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.85rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>GST (5%)</span>
+                  <span>₹{(offerPrice / 1.07 * 0.05).toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.8rem', fontSize: '0.85rem' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Platform Fee (2%)</span>
+                  <span>₹{(offerPrice / 1.07 * 0.02).toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, color: 'var(--primary)', fontSize: '1.1rem', background: 'rgba(var(--primary-rgb), 0.05)', padding: '0.75rem', borderRadius: '8px' }}>
+                  <span>Total Payable</span>
+                  <span>₹{offerPrice.toFixed(2)}</span>
+                </div>
+              </div>
+
               <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
                 * Drivers are more likely to accept offers close to the segment price.
               </p>

@@ -102,7 +102,7 @@ export default function App() {
           {/* User */}
           <Route path="/user-rides" element={<ProtectedRoute allowedRoles={["ROLE_USER"]}><UserBus /></ProtectedRoute>} />
           <Route path="/book/:id" element={<ProtectedRoute allowedRoles={["ROLE_USER"]}><BookingForm /></ProtectedRoute>} />
-          <Route path="/payment" element={<ProtectedRoute allowedRoles={["ROLE_USER"]}><PaymentPage /></ProtectedRoute>} />
+          <Route path="/payment" element={<PaymentPage />} />
           <Route path="/confirm-booking" element={<ProtectedRoute allowedRoles={["ROLE_USER"]}><ConfirmBooking /></ProtectedRoute>} />
           <Route path="/booking-success" element={<ProtectedRoute allowedRoles={["ROLE_USER"]}><PaymentSuccess /></ProtectedRoute>} />
           <Route path="/my-bookings" element={<ProtectedRoute allowedRoles={["ROLE_USER"]}><UserBookings /></ProtectedRoute>} />

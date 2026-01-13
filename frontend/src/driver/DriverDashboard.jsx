@@ -288,7 +288,14 @@ const DriverDashboard = () => {
                     <p className="text-muted mb-0" style={{ color: 'var(--text-muted)' }}>Manage your deployments, requests, and performance</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="btn btn-primary" onClick={() => nav("/driver/add-ride")}>+ Post New Ride</button>
+                    <button
+                        className={`btn ${user?.verified ? 'btn-primary' : 'btn-disabled opacity-50 cursor-not-allowed'}`}
+                        style={!user?.verified ? { background: '#ccc', borderColor: '#ccc', color: '#666' } : {}}
+                        onClick={() => user?.verified ? nav("/driver/add-ride") : showToast("Wait for admin verification", "error")}
+                        title={user?.verified ? "Post a new ride" : "Verification Pending"}
+                    >
+                        + Post New Ride
+                    </button>
                 </div>
             </header>
 
@@ -303,6 +310,27 @@ const DriverDashboard = () => {
                 }}>
                     <div className="flex items-center gap-2 font-bold">
                         {statusMsg.type === 'error' ? '⚠️' : '✅'} {statusMsg.text}
+                    </div>
+                </div>
+            )}
+
+            {!user?.verified && (
+                <div className="glass-card mb-8 slide-up" style={{
+                    background: 'rgba(245, 158, 11, 0.1)',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    color: 'var(--warning)',
+                    padding: '1rem',
+                    borderRadius: '12px',
+                    marginBottom: '2rem'
+                }}>
+                    <div className="flex items-center gap-3">
+                        <span style={{ fontSize: '1.5rem' }}>⏳</span>
+                        <div>
+                            <h4 style={{ margin: 0, fontWeight: 800 }}>Account Verification Pending</h4>
+                            <p style={{ margin: 0, opacity: 0.8, fontSize: '0.9rem' }}>
+                                You cannot post rides until an administrator verifies your driver profile. Please check back later.
+                            </p>
+                        </div>
                     </div>
                 </div>
             )}

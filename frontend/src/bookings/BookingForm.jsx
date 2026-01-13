@@ -178,12 +178,24 @@ const BookingForm = () => {
           ))}
 
           <div className="card glass" style={{ padding: '2rem', marginTop: '3rem', border: '1px solid var(--primary)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>Total Payable</div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Calculation: ₹{segmentPrice} × {seats} seats</div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.8rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Fare Breakdown</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Base Ride Fare</span>
+                <span>₹{(segmentPrice * seats / 1.07).toFixed(2)}</span>
               </div>
-              <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary)' }}>₹{(segmentPrice * seats).toFixed(2)}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>GST (5%)</span>
+                <span>₹{(segmentPrice * seats / 1.07 * 0.05).toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Platform Fee (2%)</span>
+                <span>₹{(segmentPrice * seats / 1.07 * 0.02).toFixed(2)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px solid var(--primary)', paddingTop: '1rem' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>Total Payable</div>
+                <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--primary)' }}>₹{(segmentPrice * seats).toFixed(2)}</div>
+              </div>
             </div>
             <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }}>
               Proceed to Secure Checkout

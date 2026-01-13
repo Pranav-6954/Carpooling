@@ -8,6 +8,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     users: 0, drivers: 0, vehicles: 0, bookings: 0,
     cancelledBookings: 0, totalVolume: 0, totalRides: 0,
+    netRevenue: 0, gstLiability: 0,
     cashVolume: 0, onlineVolume: 0
   });
   const [loading, setLoading] = useState(true);
@@ -33,7 +34,9 @@ const Dashboard = () => {
           vehicles: data.totalRides || 0,
           bookings: data.totalBookings || 0,
           cancelledBookings: data.cancelledBookings || 0,
-          totalVolume: data.totalEarnings || 0,
+          totalVolume: data.totalVolume || 0, // Using totalVolume for GMV
+          netRevenue: data.netRevenue || 0,
+          gstLiability: data.gstLiability || 0,
           cashVolume: data.cashVolume || 0,
           onlineVolume: data.onlineVolume || 0,
           totalRides: data.totalRides || 0
@@ -165,66 +168,74 @@ const Dashboard = () => {
                     }}>
                       Platform Financial Performance
                     </span>
-                    <h2 style={{ margin: 0, fontSize: '3rem', fontWeight: 800 }}>
-                      ₹{stats.totalVolume.toLocaleString()}
-                    </h2>
-                  </div>
-                  <div style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '16px',
-                    background: 'rgba(52, 199, 89, 0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '2rem'
-                  }}>
-                    💰
                   </div>
                 </div>
 
-                <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                  {/* Cash Card */}
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', alignItems: 'stretch' }}>
+                  {/* Net Revenue Card - Big Hero */}
                   <div style={{
-                    background: 'rgba(22, 101, 52, 0.12)',
-                    padding: '1.5rem',
+                    background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)', // Light Emerald Gradient
+                    padding: '2rem',
                     borderRadius: '16px',
-                    border: '1px solid rgba(34, 197, 94, 0.3)',
-                    transition: 'all 0.3s ease',
+                    border: '1px solid #86efac',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
                     backdropFilter: 'blur(10px)'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                      <span style={{ fontSize: '1.2rem' }}>💵</span>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cash In Flow</span>
+                    <div style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '2rem' }}>💰</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '1px' }}>Net Platform Revenue</span>
                     </div>
-                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#15803d' }}>₹{stats.cashVolume.toLocaleString()}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#166534', opacity: 0.9, marginTop: '4px', fontWeight: 600 }}>Direct cash settlements</div>
+                    <div style={{ fontSize: '3.5rem', fontWeight: 800, color: '#14532d', lineHeight: 1 }}>
+                      ₹{Math.round(stats.netRevenue).toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: '0.9rem', color: '#15803d', marginTop: '0.5rem', fontWeight: 600 }}>
+                      Adjusted 2% Earnings
+                    </div>
                   </div>
 
-                  {/* Online Card */}
-                  <div style={{
-                    background: 'rgba(30, 64, 175, 0.12)',
-                    padding: '1.5rem',
-                    borderRadius: '16px',
-                    border: '1px solid rgba(37, 99, 235, 0.3)',
-                    transition: 'all 0.3s ease',
-                    backdropFilter: 'blur(10px)'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                      <span style={{ fontSize: '1.2rem' }}>💳</span>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Digital Revenue</span>
+                  {/* Secondary Metrics Column */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+                    {/* GST Card */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', // Light Amber Gradient
+                      padding: '1.25rem',
+                      borderRadius: '16px',
+                      border: '1px solid #fcd34d',
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center'
+                    }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.25rem' }}>GST Collected (5%)</div>
+                      <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#78350f' }}>₹{Math.round(stats.gstLiability).toLocaleString()}</div>
                     </div>
-                    <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)' }}>₹{stats.onlineVolume.toLocaleString()}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--primary)', opacity: 1, marginTop: '4px', fontWeight: 600 }}>Securely processed via Stripe</div>
+
+                    {/* Total Volume Card */}
+                    <div style={{
+                      background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', // Light Indigo Gradient
+                      padding: '1.25rem',
+                      borderRadius: '16px',
+                      border: '1px solid #a5b4fc',
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center'
+                    }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#4338ca', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.25rem' }}>Total Business Volume</div>
+                      <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#312e81' }}>₹{Math.round(stats.totalVolume).toLocaleString()}</div>
+                    </div>
+
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </>
-      )
-      }
-    </div >
+      )}
+    </div>
   );
 };
 
