@@ -4,7 +4,11 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "rides")
+@Table(name = "rides", indexes = {
+    @Index(name = "idx_ride_date", columnList = "date"),
+    @Index(name = "idx_ride_from", columnList = "fromLocation"),
+    @Index(name = "idx_ride_to", columnList = "toLocation")
+})
 public class Ride {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

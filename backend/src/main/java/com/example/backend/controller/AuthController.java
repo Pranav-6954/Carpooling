@@ -19,29 +19,23 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, Object> body) {
-        System.out.println("Registration attempt for: " + body.get("email"));
+    public ResponseEntity<?> register(@RequestBody com.example.backend.dto.RegisterRequest request) {
+        System.out.println("Registration attempt for: " + request.getEmail());
         try {
-            String name = (String) body.get("name");
-            String email = (String) body.get("email");
-            String password = (String) body.get("password");
-            String role = (String) body.getOrDefault("role", "ROLE_USER");
-            String gender = (String) body.getOrDefault("gender", "Other");
-
             User u = new User();
-            u.setName(name);
-            u.setEmail(email);
-            u.setPassword(password);
-            u.setRole(role);
-            u.setGender(gender);
-            u.setProfileImage((String) body.getOrDefault("profileImage", ""));
-            u.setPhone((String) body.get("phone"));
+            u.setName(request.getName());
+            u.setEmail(request.getEmail());
+            u.setPassword(request.getPassword());
+            u.setRole(request.getRole() != null ? request.getRole() : "ROLE_USER");
+            u.setGender(request.getGender() != null ? request.getGender() : "Other");
+            u.setProfileImage(request.getProfileImage() != null ? request.getProfileImage() : "");
+            u.setPhone(request.getPhone());
 
             // Driver details
-            u.setCarModel((String) body.get("carModel"));
-            u.setLicensePlate((String) body.get("licensePlate"));
-            if (body.containsKey("capacity")) {
-                u.setCapacity(Integer.parseInt(body.get("capacity").toString()));
+            u.setCarModel(request.getCarModel());
+            u.setLicensePlate(request.getLicensePlate());
+            if (request.getCapacity() != null) {
+                u.setCapacity(request.getCapacity());
             }
 
             User saved = userService.register(u);
@@ -53,13 +47,11 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
-        System.out.println("Login attempt for: " + body.get("email"));
+    public ResponseEntity<?> login(@RequestBody com.example.backend.dto.LoginRequest request) {
+        System.out.println("Login attempt for: " + request.getEmail());
         try {
-            String email = body.get("email");
-            String password = body.get("password");
-            String token = userService.login(email, password);
-            User u = userService.findByEmail(email).orElseThrow();
+            String token = userService.login(request.getEmail(), request.getPassword());
+            User u = userService.findByEmail(request.getEmail()).orElseThrow();
             return ResponseEntity.ok(Map.of(
                     "token", token,
                     "email", u.getEmail(),
